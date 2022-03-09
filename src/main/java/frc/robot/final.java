@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,87 +33,85 @@ public class Robot extends TimedRobot {
     private int limelight_pipeline_blue = 4;
     private int limelight_pipeline_red = 3;
 
-    private int limelight_pipeline_blue = 4;
-    private int limelight_pipeline_red = 3;
-    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick0, 2);
-    private final JoystickButton m_stick_button_red = new JoystickButton(joystick0, 3);
-
     // Joysticks
     Joystick joystick0;
     Joystick joystick1;
 
+    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick0, 2);
+    private final JoystickButton m_stick_button_red = new JoystickButton(joystick0, 3);
+
     // Drivetrain
-    DifferentialDrive myDrive;
+    
     double leftPower = 0;
     double rightPower = 0;
 
     // Motors
 
-    // Sparks
-    CANSparkMax lbank;
-    CANSparkMax rbank;
-    CANSparkMax frontclimbl;
-    CANSparkMax frontclimbr;
-    CANSparkMax backclimbl;
-    CANSparkMax backclimbr;
+    Joystick joystick;
 
-    TalonSRX intake;
-    TalonSRX highOutput;
-    TalonSRX intakebrush;
+    MotorControllerGroup rightBank;
+    MotorControllerGroup leftBank;
 
-    Spark rotation;
-    Spark lowOutput;
-    Spark transferoutake;
-    Spark leadscrews;
-   
+    CANSparkMax leftFrontClimb;
+    CANSparkMax rightFrontClimb;
+    CANSparkMax leftBackClimb;
+    CANSparkMax rightBackClimb;
+    Spark leadScrews;
 
-    // Encoders
-    RelativeEncoder frontclimbl_encoder;
-    RelativeEncoder frontclimbr_encoder;
-    RelativeEncoder backclimbl_encoder;
-    RelativeEncoder backclimbr_encoder;
-    RelativeEncoder leadscrews_encoder;
+    TalonSRX highOuttake;
+    Spark lowOuttake;
+    Spark transferToOuttake;
+    Spark outtakeRotator;
 
+    TalonSRX intakeBrush;
+    TalonSRX intakeComp;
+    
+    DifferentialDrive myDrive;
 
-
-
+    RelativeEncoder leadScrewsEncoder;
+    RelativeEncoder leftFrontClimbEncoder;
+    RelativeEncoder rightFrontClimbEncoder;
+    RelativeEncoder leftBackClimbEncoder;
+    RelativeEncoder rightBackClimbEncoder;
 
     final int WIDTH = 640;
     
   
     @Override
     public void robotInit() {
-        
-        // Joystick
-        joystick0 = new Joystick(0);
-        joystick1 = new Joystick(1);
+        joystick = new Joystick(0);
 
-        rbank = new CANSparkMax(1, MotorType.kBrushless);
-        lbank = new CANSparkMax(2, MotorType.kBrushless);
-        frontclimbl = new CANSparkMax(3, MotorType.kBrushless);
-        frontclimbr = new CANSparkMax(4, MotorType.kBrushless);
-        backclimbl = new CANSparkMax(5, MotorType.kBrushless);
-        frontclimbr = new CANSparkMax(6, MotorType.kBrushless);
-        
-        highOutput = new TalonSRX(7);
-        intakebrush = new TalonSRX(8);
-        intake = new TalonSRX(9);
+        rightBank = new MotorControllerGroup(
+            new CANSparkMax(2, MotorType.kBrushless),
+            new CANSparkMax(9, MotorType.kBrushless)
+        );
 
-        leadscrews = new Spark(0);
-        rotation = new Spark(1);
-        transferoutake = new Spark(2);
-        lowOutput = new Spark(3);
+        leftBank = new MotorControllerGroup(
+            new CANSparkMax(1, MotorType.kBrushless),
+            new CANSparkMax(4, MotorType.kBrushless)
+        );
         
+        leftFrontClimb = new CANSparkMax(11, MotorType.kBrushless);
+        rightFrontClimb = new CANSparkMax(5, MotorType.kBrushless);
+        leftBackClimb = new CANSparkMax(7, MotorType.kBrushless);
+        rightBackClimb = new CANSparkMax(3, MotorType.kBrushless);
+        leadScrews = new Spark(0);
 
-        // Drive Train
+        highOuttake = new TalonSRX(?);
+        lowOuttake = new Spark(3);
+        transferToOuttake = new Spark(2);
+        outtakeRotator = new Spark(1);
+
+        intakeBrush = new TalonSRX(?);
+        intakeComp = new TalonSRX(?);
+        
         myDrive = new DifferentialDrive(lbank, rbank);
 
-        // Encoders
-        leadscrews_encoder = leadscrews.getEncoder();
-        frontclimbl_encoder = frontclimbl.getEncoder();
-        frontclimbr_encoder = frontclimbr.getEncoder();
-        backclimbl_encoder = backclimbl.getEncoder();
-        backclimbr_encoder = backclimbr.getEncoder();
+        leadScrewsEncoder = leadScrews.getEncoder();
+        leftFrontClimbEncoder = leftFrontClimb.getEncoder();
+        rightFrontClimbEncoder = rightFrontClimb.getEncoder();
+        leftBackClimbEncoder = leftBackClimb.getEncoder();
+        rightBackClimbEncoder = rightBackClimb.getEncoder();
 
         NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
     }
