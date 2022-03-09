@@ -87,16 +87,16 @@ public class Robot extends TimedRobot {
         joystick0 = new Joystick(0);
         joystick1 = new Joystick(1);
 
-        rbank = new CANSparkMax(0, MotorType.kBrushless);
-        lbank = new CANSparkMax(1, MotorType.kBrushless);
-        frontclimbl = new CANSparkMax(2, MotorType.kBrushless);
-        frontclimbr = new CANSparkMax(3, MotorType.kBrushless);
-        backclimbl = new CANSparkMax(4, MotorType.kBrushless);
-        frontclimbr = new CANSparkMax(5, MotorType.kBrushless);
+        rbank = new CANSparkMax(1, MotorType.kBrushless);
+        lbank = new CANSparkMax(2, MotorType.kBrushless);
+        frontclimbl = new CANSparkMax(3, MotorType.kBrushless);
+        frontclimbr = new CANSparkMax(4, MotorType.kBrushless);
+        backclimbl = new CANSparkMax(5, MotorType.kBrushless);
+        frontclimbr = new CANSparkMax(6, MotorType.kBrushless);
         
-        highOutput = new TalonSRX(6);
-        intakebrush = new TalonSRX(7);
-        intake = new TalonSRX(8);
+        highOutput = new TalonSRX(7);
+        intakebrush = new TalonSRX(8);
+        intake = new TalonSRX(9);
 
         leadscrews = new Spark(0);
         rotation = new Spark(1);
