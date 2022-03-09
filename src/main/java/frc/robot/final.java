@@ -49,22 +49,21 @@ public class Robot extends TimedRobot {
     // Motors
 
     // Sparks
-    Spark lbank;
-    Spark rbank;
+    CANSparkMax lbank;
+    CANSparkMax rbank;
     CANSparkMax frontclimbl;
     CANSparkMax frontclimbr;
     CANSparkMax backclimbl;
     CANSparkMax backclimbr;
-    TalonSRX intake;
-    Spark rotation;
-    TalonSRX highOutput;
-    Spark lowOutput;
-    TalonSRX intakebrush;
-    Spark transfer;
-    Spark transferoutake;
-    CANSparkMax leadscrew1;
-    CANSparkMax leadscrew2;
 
+    TalonSRX intake;
+    TalonSRX highOutput;
+    TalonSRX intakebrush;
+
+    Spark rotation;
+    Spark lowOutput;
+    Spark transferoutake;
+    Spark leadscrews;
    
 
     // Encoders
@@ -72,8 +71,7 @@ public class Robot extends TimedRobot {
     RelativeEncoder frontclimbr_encoder;
     RelativeEncoder backclimbl_encoder;
     RelativeEncoder backclimbr_encoder;
-    RelativeEncoder leadscrew1_encoder;
-    RelativeEncoder leadscrew2_encoder;
+    RelativeEncoder leadscrews_encoder;
 
 
 
@@ -89,28 +87,28 @@ public class Robot extends TimedRobot {
         joystick0 = new Joystick(0);
         joystick1 = new Joystick(1);
 
-        rbank = new Spark(0);
-        lbank = new Spark(1);
-        leadscrew1 = new CANSparkMax(0, MotorType.kBrushless);
-        leadscrew2 = new CANSparkMax(1, MotorType.kBrushless);
+        rbank = new CANSparkMax(0, MotorType.kBrushless);
+        lbank = new CANSparkMax(1, MotorType.kBrushless);
         frontclimbl = new CANSparkMax(2, MotorType.kBrushless);
         frontclimbr = new CANSparkMax(3, MotorType.kBrushless);
         backclimbl = new CANSparkMax(4, MotorType.kBrushless);
         frontclimbr = new CANSparkMax(5, MotorType.kBrushless);
-        rotation = new Spark(2);
+        
+        highOutput = new TalonSRX(6);
+        intakebrush = new TalonSRX(7);
+        intake = new TalonSRX(8);
+
+        leadscrews = new Spark(0);
+        rotation = new Spark(1);
+        transferoutake = new Spark(2);
         lowOutput = new Spark(3);
-        transfer = new Spark(4);
-        intakebrush = new TalonSRX(5);
-        intake = new TalonSRX(7);
-        transferoutake = new Spark(8);
-        highOutput = new TalonSRX(3);
+        
 
         // Drive Train
         myDrive = new DifferentialDrive(lbank, rbank);
 
         // Encoders
-        leadscrew1_encoder = leadscrew1.getEncoder();
-        leadscrew2_encoder = leadscrew2.getEncoder();
+        leadscrews_encoder = leadscrews.getEncoder();
         frontclimbl_encoder = frontclimbl.getEncoder();
         frontclimbr_encoder = frontclimbr.getEncoder();
         backclimbl_encoder = backclimbl.getEncoder();
