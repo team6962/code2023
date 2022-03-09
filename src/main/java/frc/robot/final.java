@@ -43,6 +43,10 @@ public class Robot extends TimedRobot {
     double leftPower = 0;
     double rightPower = 0;
 
+    //Hang
+    boolean commenceHang;
+    int hangStep;
+
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
@@ -131,6 +135,9 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         start = System.currentTimeMillis();
+        boolean commenceHang;
+        int hangStep;
+
         
     }
 
@@ -180,10 +187,122 @@ public class Robot extends TimedRobot {
         if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
             joystickLValue = joystickRValue;
         }
-
+        double[] test = joystickToRPS(-joystick0.getRawAxis(1), -joystick0.getRawAxis(2));
+        double[] test2 = getDrivePower(test[0], test[1], 50);
         // Actual Drive code
         //myDrive.tankDrive(joystickLValue, joystickRValue);
         myDrive.tankDrive(-leftPower, -rightPower, false);
+        //Hang Code
+        if (joystick0.getRawButton(2)) {
+            //Step 1
+            leftBackClimbEncoder.setPosition(0);
+            leftBackClimbEncoder.setPosition(0);
+            while (leftBackClimbEncoder.getPosition() < 5000){
+                leftBackClimb.set(0.8);
+            }
+            while (rightBackClimbEncoder.getPosition() < 5000){
+                rightBackClimb.set(0.8);
+            }
+        }
+
+        if (joystick0.getRawButton(3)){
+            commenceHang = true;
+        }
+
+        if (commenceHang) {
+            //Step 2
+            if (hangStep == 0){
+                if (leftBackClimbEncoder.getPosition() > 4000 || leftBackClimbEncoder.getPosition() > 4000) {
+                    if (leftBackClimbEncoder.getPosition() > - 1000) { leftBackClimb.set(-0.5); }
+                    if (rightBackClimbEncoder.getPosition() > - 1000) { rightBackClimb.set(-0.5); }
+                }
+                hangStep++;
+            }
+            //Step 3
+            if (hangStep == 1){
+                leftFrontClimbEncoder.setPosition(0);
+                rightFrontClimbEncoder.setPosition(0);
+                if (leftFrontClimbEncoder.getPosition() < 6000 || rightFrontClimbEncoder.getPosition() < 6000){
+                    if (leftFrontClimbEncoder.getPosition() < 6000){
+                        leftFrontClimb.set(0.8);
+                    }
+                    if (rightFrontClimbEncoder.getPosition() < 6000){
+                        rightFrontClimb.set(0.8);
+                    }
+                hangStep++;
+                }
+            }
+            //Step 4 and 5
+            if (hangStep == 2){
+                leadScrewsEncoder.reset();
+                if (leadScrewsEncoder.getDistance() < 35) {
+                    leadScrews.set(ControlMode.PercentOutput, 0.5);
+                
+                }
+                hangStep++;
+            }
+            
+            //Steps 6 and 7
+            if (hangStep == 3){
+                if (leftBackClimbEncoder.getPosition() < 5000 || leftBackClimbEncoder.getPosition() < 5000) {
+                    if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(0.5); leftFrontClimb.set(-0.5); }
+                    if (rightBackClimbEncoder.getPosition() < 5000) { rightBackClimb.set(0.5); leftFrontClimb.set(-0.5); }
+                }
+                hangStep++;
+            }
+            //Step 8
+            if (hangStep == 4){
+                if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
+                    if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
+                    if (rightBackClimbEncoder.getPosition() < 6000) { rightBackClimb.set(0.5); }
+                }
+                hangStep++;
+            }  
+            //Step 9
+            if (hangStep == 5){
+                if (leadScrewsEncoder.getDistance() > 25) {
+                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                } 
+                hangStep++;
+            }
+            
+            if (hangStep == 6){
+                if (leftBackClimbEncoder.getPosition() > 4000 || rightBackClimbEncoder.getPosition() > 4000) {
+                    if (leftBackClimbEncoder.getPosition() > 4000) { leftBackClimb.set(-0.5); }
+                    if (rightBackClimbEncoder.getPosition() > 4000) { rightBackClimb.set(-0.5); }
+                }
+                hangStep++;
+            }
+            
+            if (hangStep == 7){
+                if (leadScrewsEncoder.getDistance() > -20) {
+                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                } 
+                hangStep++;
+            } 
+            if (hangStep == 8){
+                if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
+                    if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
+                    if (rightBackClimbEncoder.getPosition() < 6000) { rightBackClimb.set(0.5); }
+                }
+                hangStep++;
+
+            }
+            if (hangStep == 9){
+                if (leadScrewsEncoder.getDistance() > -28) {
+                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                } 
+                hangStep++;
+            }
+            if (hangStep == 10){
+                if (leftBackClimbEncoder.getPosition() > 5500 || leftBackClimbEncoder.getPosition() > 5500) {
+                    if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(-0.5); leftFrontClimb.set(0.5); }
+                    if (rightBackClimbEncoder.getPosition() < 5000) { rightBackClimb.set(-0.5); leftFrontClimb.set(0.5); }
+                }
+                hangStep++;
+            }
+        }
+
     }
 
     @Override
@@ -243,6 +362,31 @@ public class Robot extends TimedRobot {
         //m_LimelightDriveCommand = 0.0;
         //m_LimelightSteerCommand = 0.0;
     }
+    public double[] joystickToRPS(double lateral, double rotational){
+        double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
+        double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
+        if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
+        return new double[]{leftRotationSpeed,rightRotationSpeed};
+    }
+
+    public double sigmoid(double x){
+        return (1/(1+Math.exp(x))-0.5)*2.0;
+    }
+
+    public double[] getDrivePower(double leftRotationSpeed, double rightRotationSpeed, double div) {
+        double encoder1RotationSpeed = (encoderChange[0] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
+        double encoder2RotationSpeed = (encoderChange[1] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
+        double leftPowerOutput = leftPower;
+        double rightPowerOutput = rightPower;
+        if(Math.abs(leftRotationSpeed-encoder1RotationSpeed) >= 1){
+          leftPowerOutput = approx(leftRotationSpeed);
+          rightPowerOutput = approx(rightRotationSpeed);
+        }else{
+          leftPowerOutput += sigmoid(leftRotationSpeed-encoder1RotationSpeed)/div;
+          rightPowerOutput += sigmoid(rightRotationSpeed-encoder2RotationSpeed)/div;
+        }
+        return new double[]{leftPowerOutput, rightPowerOutput};
+      }
 
     
 
