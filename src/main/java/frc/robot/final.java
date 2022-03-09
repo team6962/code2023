@@ -27,47 +27,45 @@ import org.opencv.core.Mat;
 import java.util.*;
 
 public class Robot extends TimedRobot {
+    // Limelight
     private boolean m_LimelightHasValidTarget = false;
     private double m_LimelightDriveCommand = 0.0;
     private double m_LimelightSteerCommand = 0.0;
     private int limelight_pipeline_blue = 4;
     private int limelight_pipeline_red = 3;
 
-    // Joysticks
-    Joystick joystick0;
-    Joystick joystick1;
+    //Joystick
+    Joystick joystick;
+    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick, 2);
+    private final JoystickButton m_stick_button_red = new JoystickButton(joystick, 3);
 
-    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick0, 2);
-    private final JoystickButton m_stick_button_red = new JoystickButton(joystick0, 3);
-
-    // Drivetrain
-    
+    // Drive power
     double leftPower = 0;
     double rightPower = 0;
 
-    // Motors
-
-    Joystick joystick;
-
+    // Drive Motor Controllers
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
+    DifferentialDrive myDrive;
 
+    // Climb Motor Controllers
     CANSparkMax leftFrontClimb;
     CANSparkMax rightFrontClimb;
     CANSparkMax leftBackClimb;
     CANSparkMax rightBackClimb;
     Spark leadScrews;
 
+    // Outtake Motor Controllers
     TalonSRX highOuttake;
     Spark lowOuttake;
     Spark transferToOuttake;
     Spark outtakeRotator;
 
+    // Intake Motor Controllers
     TalonSRX intakeBrush;
     TalonSRX intakeComp;
-    
-    DifferentialDrive myDrive;
 
+    // Encoders
     RelativeEncoder leadScrewsEncoder;
     RelativeEncoder leftFrontClimbEncoder;
     RelativeEncoder rightFrontClimbEncoder;
@@ -75,10 +73,10 @@ public class Robot extends TimedRobot {
     RelativeEncoder rightBackClimbEncoder;
 
     final int WIDTH = 640;
-    
   
     @Override
     public void robotInit() {
+        // Joystick
         joystick = new Joystick(0);
 
         rightBank = new MotorControllerGroup(
@@ -105,7 +103,7 @@ public class Robot extends TimedRobot {
         intakeBrush = new TalonSRX(?);
         intakeComp = new TalonSRX(?);
         
-        myDrive = new DifferentialDrive(lbank, rbank);
+        myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = leadScrews.getEncoder();
         leftFrontClimbEncoder = leftFrontClimb.getEncoder();
@@ -120,7 +118,6 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         
     }
-
 
     @Override
     public void autonomousInit() {
@@ -149,18 +146,18 @@ public class Robot extends TimedRobot {
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_red);
         }
         Update_Limelight_Tracking();
-        boolean auto = joystick0.getRawButton(1);
-        lbank.setVoltage(12);
-        rbank.setVoltage(12);
+        boolean auto = joystick.getRawButton(1);
+        leftBank.setVoltage(12);
+        rightBank.setVoltage(12);
         long now = System.currentTimeMillis();
         // Turning speed limit
         double limitTurnSpeed = 0.75; // EDITABLE VALUE
 
         // Default manual Drive Values
         double joystickLValue =
-                (-joystick0.getRawAxis(1) + (joystick0.getRawAxis(2) * limitTurnSpeed));
+                (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
         double joystickRValue =
-                (-joystick0.getRawAxis(1) - (joystick0.getRawAxis(2) * limitTurnSpeed));
+                (-joystick.getRawAxis(1) - (joystick.getRawAxis(2) * limitTurnSpeed));
 
         // ADDITIONAL DRIVE CODE HERE
         if (auto)
