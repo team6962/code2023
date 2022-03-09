@@ -24,13 +24,17 @@ import org.opencv.core.Mat;
 
 import java.util.*;
 
-private boolean m_LimelightHasValidTarget = false;
-private double m_LimelightDriveCommand = 0.0;
-private double m_LimelightSteerCommand = 0.0;
-private int limelight_pipeline_blue = 4;
-private int limelight_pipeline_red = 3;
-
 public class Robot extends TimedRobot {
+    private boolean m_LimelightHasValidTarget = false;
+    private double m_LimelightDriveCommand = 0.0;
+    private double m_LimelightSteerCommand = 0.0;
+    private int limelight_pipeline_blue = 4;
+    private int limelight_pipeline_red = 3;
+
+    private int limelight_pipeline_blue = 4;
+    private int limelight_pipeline_red = 3;
+    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick0, 2);
+    private final JoystickButton m_stick_button_red = new JoystickButton(joystick0, 3);
 
     // Joysticks
     Joystick joystick0;
@@ -111,7 +115,7 @@ public class Robot extends TimedRobot {
         backclimbl_encoder = backclimbl.getEncoder();
         backclimbr_encoder = backclimbr.getEncoder();
 
-
+        NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
     }
 
     @Override
@@ -137,6 +141,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
+        if (m_stick.getRawButtonPressed(2)) {
+            System.out.println("Seeking Blue");
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
+        }
+      
+        if (m_stick.getRawButtonPressed(3)) {
+            System.out.println("Seeking Red");
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_red);
+        }
+        Update_Limelight_Tracking();
+        boolean auto = joystick0.getRawButton(1);
         lbank.setVoltage(12);
         rbank.setVoltage(12);
         long now = System.currentTimeMillis();
@@ -150,7 +165,19 @@ public class Robot extends TimedRobot {
                 (-joystick0.getRawAxis(1) - (joystick0.getRawAxis(2) * limitTurnSpeed));
 
         // ADDITIONAL DRIVE CODE HERE
-
+        if (auto)
+        {
+            if (m_LimelightHasValidTarget)
+            {
+                System.out.println("Auto Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
+                m_robotDrive.arcadeDrive(m_LimelightDriveCommand,m_LimelightSteerCommand);
+            }
+            else
+            {
+            //System.out.println("Auto but no target! Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
+            m_robotDrive.arcadeDrive(0.0, 0.5);
+            }
+        }
 
         
         
@@ -166,6 +193,61 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {}
+
+    public void Update_Limelight_Tracking()
+    {
+        // These numbers must be tuned for your Robot!  Be careful!
+        final double STEER_K = 0.06;                    // how hard to turn toward the target (initial 0.03)
+        final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target (initial 0.26)
+        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
+        final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
+        final double MIN_STEER = -0.7;
+        final double MAX_STEER = 0.7;
+
+        double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
+        double tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
+        double ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
+        double ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
+
+        if (tv < 1.0)
+        {
+          m_LimelightHasValidTarget = false;
+          m_LimelightDriveCommand = 0.0;
+          m_LimelightSteerCommand = 0.0;
+          return;
+        }
+
+        m_LimelightHasValidTarget = true;
+
+        // Start with proportional steering
+        double steer_cmd = tx * STEER_K;
+
+        // try to drive forward until the target area reaches our desired area
+        double drive_cmd = (DESIRED_TARGET_AREA - ta) * DRIVE_K;
+
+        // don't let the robot drive too fast into the goal
+        if (drive_cmd > MAX_DRIVE)
+        {
+          drive_cmd = MAX_DRIVE;
+        }
+
+        if (steer_cmd > MAX_STEER) {
+          steer_cmd = MAX_STEER;
+        }
+
+        if (steer_cmd < MIN_STEER) {
+          steer_cmd = MIN_STEER;
+        }
+
+        m_LimelightSteerCommand = steer_cmd;
+        m_LimelightDriveCommand = -drive_cmd;
+
+        //System.out.println("Steering Tx=" + tx + " Steer=" + steer_cmd);
+        //System.out.println("Driving Ta=" + ta + " Drive=" + drive_cmd);
+
+        //m_LimelightDriveCommand = 0.0;
+        //m_LimelightSteerCommand = 0.0;
+    }
 
     
 
