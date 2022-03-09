@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.io.File;
@@ -54,11 +55,11 @@ public class Robot extends TimedRobot {
     CANSparkMax frontclimbr;
     CANSparkMax backclimbl;
     CANSparkMax backclimbr;
-    Spark intake;
+    TalonSRX intake;
     Spark rotation;
-    Spark output;
-    Spark output2;
-    Spark intakebrush;
+    TalonSRX highOutput;
+    Spark lowOutput;
+    TalonSRX intakebrush;
     Spark transfer;
     Spark transferoutake;
     CANSparkMax leadscrew1;
@@ -97,12 +98,12 @@ public class Robot extends TimedRobot {
         backclimbl = new CANSparkMax(4, MotorType.kBrushless);
         frontclimbr = new CANSparkMax(5, MotorType.kBrushless);
         rotation = new Spark(2);
-        output = new Spark(3);
+        lowOutput = new Spark(3);
         transfer = new Spark(4);
-        intakebrush = new Spark(5);
-        intake = new Spark(7);
+        intakebrush = new TalonSRX(5);
+        intake = new TalonSRX(7);
         transferoutake = new Spark(8);
-        output2 = new Spark(3);
+        highOutput = new TalonSRX(3);
 
         // Drive Train
         myDrive = new DifferentialDrive(lbank, rbank);
