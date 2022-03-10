@@ -244,7 +244,7 @@ public class Robot extends TimedRobot {
         //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        myDrive.tankDrive(calcDriveCurve(-leftPower), calcDriveCurve(-rightPower), false);
+        myDrive.tankDrive(calcDriveCurve(-joystickLValue), calcDriveCurve(-joystickRValue), false);
 
         //Hang Code
         
