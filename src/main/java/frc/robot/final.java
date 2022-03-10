@@ -159,12 +159,13 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        if (m_stick.getRawButtonPressed(2)) {
+        //Toggle seeking red or blue balls
+        if (m_stick.getRawButtonPressed(8)) {
             System.out.println("Seeking Blue");
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
         }
       
-        if (m_stick.getRawButtonPressed(3)) {
+        if (m_stick.getRawButtonPressed(9)) {
             System.out.println("Seeking Red");
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_red);
         }
@@ -175,6 +176,21 @@ public class Robot extends TimedRobot {
         long now = System.currentTimeMillis();
         // Turning speed limit
         double limitTurnSpeed = 0.75; // EDITABLE VALUE
+
+        //Outtake
+        if (joystick.getRawButton(1)) {
+            highOuttake.set(joystick.getRawAxis(3) * 0.5);
+            lowOuttake.set(joystick.getRawAxis(3) * 0.5);
+        }
+        //Intake
+        if (joystick.getRawButton(2)) {
+            intakeComp.set(0.8);
+            intakeBrush.set(0.8);
+        }
+        //Transfer
+        if (joystick.getRawButton(5)){
+            transferToOuttake.set(0.8)
+        }
 
         // Default manual Drive Values
         double joystickLValue =
@@ -203,14 +219,16 @@ public class Robot extends TimedRobot {
         if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
             joystickLValue = joystickRValue;
         }
-        double[] test = joystickToRPS(-joystick0.getRawAxis(1), -joystick0.getRawAxis(2));
+        double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
         double[] test2 = getDrivePower(test[0], test[1], 50);
+
         // Actual Drive code
-        //myDrive.tankDrive(joystickLValue, joystickRValue);
         myDrive.tankDrive(-leftPower, -rightPower, false);
+
+
         //Hang Code
-        if (joystick0.getRawButton(2)) {
-            //Step 1
+        if (joystick.getRawButton(3)) {
+            //Step 1: Extend back arms up
             leftBackClimbEncoder.setPosition(0);
             leftBackClimbEncoder.setPosition(0);
             while (leftBackClimbEncoder.getPosition() < 5000){
@@ -221,20 +239,20 @@ public class Robot extends TimedRobot {
             }
         }
 
-        if (joystick0.getRawButton(3)){
+        if (joystick.getRawButton(4)){
             commenceHang = true;
         }
 
         if (commenceHang) {
-            //Step 2
+            //Step 2: Move back arms down to winch them
             if (hangStep == 0){
                 if (leftBackClimbEncoder.getPosition() > 4000 || leftBackClimbEncoder.getPosition() > 4000) {
-                    if (leftBackClimbEncoder.getPosition() > - 1000) { leftBackClimb.set(-0.5); }
-                    if (rightBackClimbEncoder.getPosition() > - 1000) { rightBackClimb.set(-0.5); }
+                    if (leftBackClimbEncoder.getPosition() > 4000) { leftBackClimb.set(-0.5); }
+                    if (rightBackClimbEncoder.getPosition() > 4000) { rightBackClimb.set(-0.5); }
                 }
                 hangStep++;
             }
-            //Step 3
+            //Step 3: Extend front arms up
             if (hangStep == 1){
                 leftFrontClimbEncoder.setPosition(0);
                 rightFrontClimbEncoder.setPosition(0);
@@ -248,7 +266,7 @@ public class Robot extends TimedRobot {
                 hangStep++;
                 }
             }
-            //Step 4 and 5
+            //Step 4 and 5: Rotate the robot + winch the front arms on to the high bar
             if (hangStep == 2){
                 leadScrewsEncoder.reset();
                 if (leadScrewsEncoder.getDistance() < 35) {
@@ -258,7 +276,7 @@ public class Robot extends TimedRobot {
                 hangStep++;
             }
             
-            //Steps 6 and 7
+            //Steps 6 and 7:  Rotate the robot back to an upright position + release the weight on the back arms
             if (hangStep == 3){
                 if (leftBackClimbEncoder.getPosition() < 5000 || leftBackClimbEncoder.getPosition() < 5000) {
                     if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(0.5); leftFrontClimb.set(-0.5); }
@@ -266,7 +284,7 @@ public class Robot extends TimedRobot {
                 }
                 hangStep++;
             }
-            //Step 8
+            //Step 8: Extend the back arms so they are un-winched
             if (hangStep == 4){
                 if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
                     if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
@@ -274,14 +292,14 @@ public class Robot extends TimedRobot {
                 }
                 hangStep++;
             }  
-            //Step 9
+            //Step 9: Rotate the back arms so that they are hovering over the traversal bar
             if (hangStep == 5){
                 if (leadScrewsEncoder.getDistance() > 25) {
                     leadScrews.set(ControlMode.PercentOutput, -0.5);
                 } 
                 hangStep++;
             }
-            
+            //Step 10: Slightly shrink the back arms for rotation
             if (hangStep == 6){
                 if (leftBackClimbEncoder.getPosition() > 4000 || rightBackClimbEncoder.getPosition() > 4000) {
                     if (leftBackClimbEncoder.getPosition() > 4000) { leftBackClimb.set(-0.5); }
@@ -289,13 +307,14 @@ public class Robot extends TimedRobot {
                 }
                 hangStep++;
             }
-            
+            //Step 11: Rotate the back arms into a position to grab the traversal bar (slightly lesss)
             if (hangStep == 7){
                 if (leadScrewsEncoder.getDistance() > -20) {
                     leadScrews.set(ControlMode.PercentOutput, -0.5);
                 } 
                 hangStep++;
             } 
+            //Step 12: Extend the back arms to the height of the traversal bar 
             if (hangStep == 8){
                 if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
                     if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
@@ -304,12 +323,14 @@ public class Robot extends TimedRobot {
                 hangStep++;
 
             }
+            //Step 13: Rotate the back arms so they latch on to the traversal bar
             if (hangStep == 9){
                 if (leadScrewsEncoder.getDistance() > -28) {
                     leadScrews.set(ControlMode.PercentOutput, -0.5);
                 } 
                 hangStep++;
             }
+            //Step 14: Same as step 6 to bring the robot into an upright position
             if (hangStep == 10){
                 if (leftBackClimbEncoder.getPosition() > 5500 || leftBackClimbEncoder.getPosition() > 5500) {
                     if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(-0.5); leftFrontClimb.set(0.5); }
