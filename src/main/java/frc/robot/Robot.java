@@ -100,13 +100,13 @@ public class Robot extends TimedRobot {
         );
 
         leftBank = new MotorControllerGroup(
-            new CANSparkMax(1, MotorType.kBrushless),
+            new CANSparkMax(7, MotorType.kBrushless),
             new CANSparkMax(4, MotorType.kBrushless)
         );
         
         frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
         frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
-        backLeftClimb = new CANSparkMax(7, MotorType.kBrushless);
+        backLeftClimb = new CANSparkMax(1, MotorType.kBrushless);
         backRightClimb = new CANSparkMax(3, MotorType.kBrushless);
         leadScrews = new Spark(0);
 
