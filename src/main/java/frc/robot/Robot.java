@@ -208,7 +208,7 @@ public class Robot extends TimedRobot {
         }
         //Transfer
         if (joystick.getRawButton(5)){
-            transferToOuttake.set(0.8)
+            transferToOuttake.set(0.8);
         }
 
         // Default manual Drive Values
