@@ -39,7 +39,7 @@ public class Robot extends TimedRobot {
     private final JoystickButton m_stick_button_blue = new JoystickButton(joystick, 2);
     private final JoystickButton m_stick_button_red = new JoystickButton(joystick, 3);
 
-    // Drive power
+    // Drive Power
     double leftPower = 0;
     double rightPower = 0;
 
@@ -76,8 +76,14 @@ public class Robot extends TimedRobot {
     RelativeEncoder leftBackClimbEncoder;
     RelativeEncoder rightBackClimbEncoder;
 
+    float leadScrewsEncoderValue;
+    float leftFrontClimbEncoderValue;
+    float rightFrontClimbEncoderValue;
+    float leftBackClimbEncoderValue;
+    float rightBackClimbEncoderValue;
+
     final int WIDTH = 640;
-  
+    
     @Override
     public void robotInit() {
         // Joystick
@@ -120,7 +126,17 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        
+        leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
+        leftFrontClimbEncoderValue += resetEncoderValue(leftFrontClimbEncoder);
+        rightFrontClimbEncoderValue += resetEncoderValue(rightFrontClimbEncoder);
+        leftBackClimbEncoderValue += resetEncoderValue(leftBackClimbEncoder);
+        rightBackClimbEncoderValue += resetEncoderValue(rightBackClimbEncoder);
+    }
+
+    public float resetEncoderValue(RelativeEncoder encoder) {
+        float value = encoder.getPosition();
+        encoder.reset();
+        return value;
     }
 
     @Override
