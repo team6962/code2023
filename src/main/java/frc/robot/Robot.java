@@ -196,7 +196,7 @@ public class Robot extends TimedRobot {
         double limitTurnSpeed = 0.75; // EDITABLE VALUE
 
         //Outtake
-       /* if (joystick.getRawButton(1)) {
+        if (joystick.getRawButton(1)) {
             myDrive.tankDrive(0, 0);
             highOuttake.set(joystick.getRawAxis(1) * 0.5);
             lowOuttake.set(joystick.getRawAxis(1) * 0.5);
@@ -210,7 +210,7 @@ public class Robot extends TimedRobot {
         if (joystick.getRawButton(5)){
             transferToOuttake.set(0.8)
         }
-    */
+
         // Default manual Drive Values
         double joystickLValue =
                 (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
