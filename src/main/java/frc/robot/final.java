@@ -186,8 +186,9 @@ public class Robot extends TimedRobot {
 
         //Outtake
        /* if (joystick.getRawButton(1)) {
-            highOuttake.set(joystick.getRawAxis(3) * 0.5);
-            lowOuttake.set(joystick.getRawAxis(3) * 0.5);
+            myDrive.tankDrive(0, 0);
+            highOuttake.set(joystick.getRawAxis(1) * 0.5);
+            lowOuttake.set(joystick.getRawAxis(1) * 0.5);
         }
         //Intake
         if (joystick.getRawButton(2)) {
