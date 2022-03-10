@@ -75,7 +75,7 @@ public class Robot extends TimedRobot {
     Spark intakeComp;
 
     // Encoders
-    DutyCycleEncoder leadScrewsEncoder;
+    RelativeEncoder leadScrewsEncoder;
     RelativeEncoder leftFrontClimbEncoder;
     RelativeEncoder rightFrontClimbEncoder;
     RelativeEncoder leftBackClimbEncoder;
@@ -119,7 +119,7 @@ public class Robot extends TimedRobot {
         intakeComp = new Spark(5);
         //myDrive = new DifferentialDrive(leftBank, rightBank);
 
-        leadScrewsEncoder = new DutyCycleEncoder(0);
+        leadScrewsEncoder = new RelativeEncoder(0, 1);
         leftFrontClimbEncoder = leftFrontClimb.getEncoder();
         rightFrontClimbEncoder = rightFrontClimb.getEncoder();
         leftBackClimbEncoder = leftBackClimb.getEncoder();
