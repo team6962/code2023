@@ -166,7 +166,7 @@ public class Robot extends TimedRobot {
     public double calcDriveCurve(double power) {
         if (power > 0.018) {
             return -1 * (Math.log(1 / (power + 0) - 1) / 8) + 0.5;
-        } else if (power < 0.018) {
+        } else if (power < 0.018){
             return -1 * (Math.log(1 / (power + 1) - 1) / 8) - 0.5;
         }
         return 0;
@@ -244,7 +244,7 @@ public class Robot extends TimedRobot {
         //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        myDrive.tankDrive(-calcDriveCurve(joystickLValue), -calcDriveCurve(joystickRValue), false);
+        myDrive.tankDrive(calcDriveCurve(-leftPower), calcDriveCurve(-rightPower), false);
 
         //Hang Code
         
@@ -366,8 +366,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {}
-
-    /*public void Update_Limelight_Tracking()
+/*
+    public void Update_Limelight_Tracking()
     {
         // These numbers must be tuned for your Robot!  Be careful!
         final double STEER_K = 0.06;                    // how hard to turn toward the target (initial 0.03)
@@ -424,8 +424,8 @@ public class Robot extends TimedRobot {
     }
     */
     
-}
-   /* public double[] joystickToRPS(double lateral, double rotational){
+}/*
+    public double[] joystickToRPS(double lateral, double rotational){
         double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
