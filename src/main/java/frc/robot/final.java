@@ -163,6 +163,17 @@ public class Robot extends TimedRobot {
         
     }
 
+    public double calcDriveCurve(double power) {
+        if (power > 0.018) {
+            return -1 * (Math.log(1 / (x + 0) - 1) / 8) + 0.5
+        } else if (power < 0.018)
+            return -1 * (Math.log(1 / (x + 1) - 1) / 8) - 0.5
+        }
+        return 0
+    }
+
+    
+
     @Override
     public void teleopPeriodic() {
         //Toggle seeking red or blue balls
@@ -229,12 +240,11 @@ public class Robot extends TimedRobot {
         if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
             joystickLValue = joystickRValue;
         }
-       // double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
-        //double[] test2 = getDrivePower(test[0], test[1], 50);
+        double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
+        double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        //myDrive.tankDrive(-leftPower, -rightPower, false);
-
+        myDrive.tankDrive(-leftPower, -rightPower, false);
 
         //Hang Code
         
@@ -372,7 +382,7 @@ public class Robot extends TimedRobot {
         double ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
         double ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
 */
-       /* if (tv < 1.0)
+    if (tv < 1.0)
         {
           m_LimelightHasValidTarget = false;
           m_LimelightDriveCommand = 0.0;
@@ -410,18 +420,14 @@ public class Robot extends TimedRobot {
 
         //m_LimelightDriveCommand = 0.0;
         //m_LimelightSteerCommand = 0.0;
-        */
+        
     }
 }
-    /*public double[] joystickToRPS(double lateral, double rotational){
+    public double[] joystickToRPS(double lateral, double rotational){
         double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
         return new double[]{leftRotationSpeed,rightRotationSpeed};
-    }
-
-    public double sigmoid(double x){
-        return (1/(1+Math.exp(x))-0.5)*2.0;
     }
 
     public double[] getDrivePower(double leftRotationSpeed, double rightRotationSpeed, double div) {
@@ -433,12 +439,11 @@ public class Robot extends TimedRobot {
           leftPowerOutput = approx(leftRotationSpeed);
           rightPowerOutput = approx(rightRotationSpeed);
         }else{
-          leftPowerOutput += sigmoid(leftRotationSpeed-encoder1RotationSpeed)/div;
-          rightPowerOutput += sigmoid(rightRotationSpeed-encoder2RotationSpeed)/div;
+          leftPowerOutput += calcDriveCurve(leftRotationSpeed-encoder1RotationSpeed)/div;
+          rightPowerOutput += calcDriveCurve(rightRotationSpeed-encoder2RotationSpeed)/div;
         }
         return new double[]{leftPowerOutput, rightPowerOutput};
       }
-*/
     
 
    
