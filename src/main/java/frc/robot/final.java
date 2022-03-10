@@ -2,12 +2,17 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.cscore.CvSink;
 import edu.wpi.first.cscore.CvSource;
 import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.hal.simulation.DutyCycleDataJNI;
 import edu.wpi.first.cameraserver.*;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Joystick;
@@ -16,7 +21,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+//import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.io.File;
 import java.io.IOException;
@@ -36,8 +41,8 @@ public class Robot extends TimedRobot {
 
     //Joystick
     Joystick joystick;
-    private final JoystickButton m_stick_button_blue = new JoystickButton(joystick, 2);
-    private final JoystickButton m_stick_button_red = new JoystickButton(joystick, 3);
+    //private final JoystickButton m_stick_button_blue = new JoystickButton(joystick, 2);
+    //private final JoystickButton m_stick_button_red = new JoystickButton(joystick, 3);
 
     // Drive Power
     double leftPower = 0;
@@ -50,7 +55,7 @@ public class Robot extends TimedRobot {
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
-    DifferentialDrive myDrive;
+    //DifferentialDrive myDrive;
 
     // Climb Motor Controllers
     CANSparkMax leftFrontClimb;
@@ -60,27 +65,27 @@ public class Robot extends TimedRobot {
     Spark leadScrews;
 
     // Outtake Motor Controllers
-    TalonSRX highOuttake;
+    Spark highOuttake;
     Spark lowOuttake;
     Spark transferToOuttake;
     Spark outtakeRotator;
 
     // Intake Motor Controllers
-    TalonSRX intakeBrush;
-    TalonSRX intakeComp;
+    Spark intakeBrush;
+    Spark intakeComp;
 
     // Encoders
-    RelativeEncoder leadScrewsEncoder;
+    DutyCycleEncoder leadScrewsEncoder;
     RelativeEncoder leftFrontClimbEncoder;
     RelativeEncoder rightFrontClimbEncoder;
     RelativeEncoder leftBackClimbEncoder;
     RelativeEncoder rightBackClimbEncoder;
 
-    float leadScrewsEncoderValue;
-    float leftFrontClimbEncoderValue;
-    float rightFrontClimbEncoderValue;
-    float leftBackClimbEncoderValue;
-    float rightBackClimbEncoderValue;
+    double leadScrewsEncoderValue;
+    double leftFrontClimbEncoderValue;
+    double rightFrontClimbEncoderValue;
+    double leftBackClimbEncoderValue;
+    double rightBackClimbEncoderValue;
 
     final int WIDTH = 640;
     
@@ -105,52 +110,53 @@ public class Robot extends TimedRobot {
         rightBackClimb = new CANSparkMax(3, MotorType.kBrushless);
         leadScrews = new Spark(0);
 
-        highOuttake = new TalonSRX(?);
+        highOuttake = new Spark(4);
         lowOuttake = new Spark(3);
         transferToOuttake = new Spark(2);
         outtakeRotator = new Spark(1);
 
-        intakeBrush = new TalonSRX(?);
-        intakeComp = new TalonSRX(?);
-        
-        myDrive = new DifferentialDrive(leftBank, rightBank);
+        intakeBrush = new Spark(6);
+        intakeComp = new Spark(5);
+        //myDrive = new DifferentialDrive(leftBank, rightBank);
 
-        leadScrewsEncoder = leadScrews.getEncoder();
+        leadScrewsEncoder = new DutyCycleEncoder(0);
         leftFrontClimbEncoder = leftFrontClimb.getEncoder();
         rightFrontClimbEncoder = rightFrontClimb.getEncoder();
         leftBackClimbEncoder = leftBackClimb.getEncoder();
         rightBackClimbEncoder = rightBackClimb.getEncoder();
-
-        NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
+       // NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
     }
 
     @Override
     public void robotPeriodic() {
-        leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
+        //leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
         leftFrontClimbEncoderValue += resetEncoderValue(leftFrontClimbEncoder);
         rightFrontClimbEncoderValue += resetEncoderValue(rightFrontClimbEncoder);
         leftBackClimbEncoderValue += resetEncoderValue(leftBackClimbEncoder);
         rightBackClimbEncoderValue += resetEncoderValue(rightBackClimbEncoder);
     }
 
-    public float resetEncoderValue(RelativeEncoder encoder) {
-        float value = encoder.getPosition();
-        encoder.reset();
+    public double resetEncoderValue(RelativeEncoder encoder) {
+        double value = encoder.getPosition();
+        encoder.setPosition(0);
         return value;
     }
 
     @Override
     public void autonomousInit() {
-        start = System.currentTimeMillis();
+       // start = System.currentTimeMillis();
     }
 
     @Override
     public void autonomousPeriodic() {
+        //myDrive.tankDrive(0.1, -0.1);
+        intakeBrush.set(0.2);
+        intakeComp.set(0.2);
     }
 
     @Override
     public void teleopInit() {
-        start = System.currentTimeMillis();
+        //start = System.currentTimeMillis();
         boolean commenceHang;
         int hangStep;
 
@@ -160,7 +166,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         //Toggle seeking red or blue balls
-        if (m_stick.getRawButtonPressed(8)) {
+       /* if (m_stick.getRawButtonPressed(8)) {
             System.out.println("Seeking Blue");
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
         }
@@ -169,6 +175,7 @@ public class Robot extends TimedRobot {
             System.out.println("Seeking Red");
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_red);
         }
+        */
         Update_Limelight_Tracking();
         boolean auto = joystick.getRawButton(1);
         leftBank.setVoltage(12);
@@ -178,7 +185,7 @@ public class Robot extends TimedRobot {
         double limitTurnSpeed = 0.75; // EDITABLE VALUE
 
         //Outtake
-        if (joystick.getRawButton(1)) {
+       /* if (joystick.getRawButton(1)) {
             highOuttake.set(joystick.getRawAxis(3) * 0.5);
             lowOuttake.set(joystick.getRawAxis(3) * 0.5);
         }
@@ -191,7 +198,7 @@ public class Robot extends TimedRobot {
         if (joystick.getRawButton(5)){
             transferToOuttake.set(0.8)
         }
-
+    */
         // Default manual Drive Values
         double joystickLValue =
                 (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
@@ -199,6 +206,7 @@ public class Robot extends TimedRobot {
                 (-joystick.getRawAxis(1) - (joystick.getRawAxis(2) * limitTurnSpeed));
 
         // ADDITIONAL DRIVE CODE HERE
+        /*
         if (auto)
         {
             if (m_LimelightHasValidTarget)
@@ -212,6 +220,7 @@ public class Robot extends TimedRobot {
             m_robotDrive.arcadeDrive(0.0, 0.5);
             }
         }
+        */
 
         
         
@@ -219,14 +228,15 @@ public class Robot extends TimedRobot {
         if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
             joystickLValue = joystickRValue;
         }
-        double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
-        double[] test2 = getDrivePower(test[0], test[1], 50);
+       // double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
+        //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        myDrive.tankDrive(-leftPower, -rightPower, false);
+        //myDrive.tankDrive(-leftPower, -rightPower, false);
 
 
         //Hang Code
+        
         if (joystick.getRawButton(3)) {
             //Step 1: Extend back arms up
             leftBackClimbEncoder.setPosition(0);
@@ -270,7 +280,7 @@ public class Robot extends TimedRobot {
             if (hangStep == 2){
                 leadScrewsEncoder.reset();
                 if (leadScrewsEncoder.getDistance() < 35) {
-                    leadScrews.set(ControlMode.PercentOutput, 0.5);
+                    leadScrews.set(0.5);
                 
                 }
                 hangStep++;
@@ -295,7 +305,7 @@ public class Robot extends TimedRobot {
             //Step 9: Rotate the back arms so that they are hovering over the traversal bar
             if (hangStep == 5){
                 if (leadScrewsEncoder.getDistance() > 25) {
-                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                    leadScrews.set(-0.5);
                 } 
                 hangStep++;
             }
@@ -310,7 +320,7 @@ public class Robot extends TimedRobot {
             //Step 11: Rotate the back arms into a position to grab the traversal bar (slightly lesss)
             if (hangStep == 7){
                 if (leadScrewsEncoder.getDistance() > -20) {
-                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                    leadScrews.set(-0.5);
                 } 
                 hangStep++;
             } 
@@ -326,7 +336,7 @@ public class Robot extends TimedRobot {
             //Step 13: Rotate the back arms so they latch on to the traversal bar
             if (hangStep == 9){
                 if (leadScrewsEncoder.getDistance() > -28) {
-                    leadScrews.set(ControlMode.PercentOutput, -0.5);
+                    leadScrews.set(-0.5);
                 } 
                 hangStep++;
             }
@@ -339,6 +349,7 @@ public class Robot extends TimedRobot {
                 hangStep++;
             }
         }
+        
 
     }
 
@@ -355,12 +366,12 @@ public class Robot extends TimedRobot {
         final double MIN_STEER = -0.7;
         final double MAX_STEER = 0.7;
 
-        double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
+       /* double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
         double tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
         double ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
         double ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
-
-        if (tv < 1.0)
+*/
+       /* if (tv < 1.0)
         {
           m_LimelightHasValidTarget = false;
           m_LimelightDriveCommand = 0.0;
@@ -398,8 +409,10 @@ public class Robot extends TimedRobot {
 
         //m_LimelightDriveCommand = 0.0;
         //m_LimelightSteerCommand = 0.0;
+        */
     }
-    public double[] joystickToRPS(double lateral, double rotational){
+}
+    /*public double[] joystickToRPS(double lateral, double rotational){
         double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
         if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
@@ -424,7 +437,7 @@ public class Robot extends TimedRobot {
         }
         return new double[]{leftPowerOutput, rightPowerOutput};
       }
-
+*/
     
 
    
