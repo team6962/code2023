@@ -58,10 +58,10 @@ public class Robot extends TimedRobot {
     //DifferentialDrive myDrive;
 
     // Climb Motor Controllers
-    CANSparkMax leftFrontClimb;
-    CANSparkMax rightFrontClimb;
-    CANSparkMax leftBackClimb;
-    CANSparkMax rightBackClimb;
+    CANSparkMax frontLeftClimb;
+    CANSparkMax frontRightClimb;
+    CANSparkMax backLeftClimb;
+    CANSparkMax backRightClimb;
     Spark leadScrews;
 
     // Outtake Motor Controllers
@@ -76,16 +76,16 @@ public class Robot extends TimedRobot {
 
     // Encoders
     RelativeEncoder leadScrewsEncoder;
-    RelativeEncoder leftFrontClimbEncoder;
-    RelativeEncoder rightFrontClimbEncoder;
-    RelativeEncoder leftBackClimbEncoder;
-    RelativeEncoder rightBackClimbEncoder;
+    RelativeEncoder frontLeftClimbEncoder;
+    RelativeEncoder frontRightClimbEncoder;
+    RelativeEncoder backLeftClimbEncoder;
+    RelativeEncoder backRightClimbEncoder;
 
     double leadScrewsEncoderValue;
-    double leftFrontClimbEncoderValue;
-    double rightFrontClimbEncoderValue;
-    double leftBackClimbEncoderValue;
-    double rightBackClimbEncoderValue;
+    double frontLeftClimbEncoderValue;
+    double frontRightClimbEncoderValue;
+    double backLeftClimbEncoderValue;
+    double backRightClimbEncoderValue;
 
     final int WIDTH = 640;
     
@@ -104,10 +104,10 @@ public class Robot extends TimedRobot {
             new CANSparkMax(4, MotorType.kBrushless)
         );
         
-        leftFrontClimb = new CANSparkMax(11, MotorType.kBrushless);
-        rightFrontClimb = new CANSparkMax(5, MotorType.kBrushless);
-        leftBackClimb = new CANSparkMax(7, MotorType.kBrushless);
-        rightBackClimb = new CANSparkMax(3, MotorType.kBrushless);
+        frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
+        frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
+        backLeftClimb = new CANSparkMax(7, MotorType.kBrushless);
+        backRightClimb = new CANSparkMax(3, MotorType.kBrushless);
         leadScrews = new Spark(0);
 
         highOuttake = new Spark(4);
@@ -120,20 +120,20 @@ public class Robot extends TimedRobot {
         //myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = new RelativeEncoder(0, 1);
-        leftFrontClimbEncoder = leftFrontClimb.getEncoder();
-        rightFrontClimbEncoder = rightFrontClimb.getEncoder();
-        leftBackClimbEncoder = leftBackClimb.getEncoder();
-        rightBackClimbEncoder = rightBackClimb.getEncoder();
+        frontLeftClimbEncoder = frontLeftClimb.getEncoder();
+        frontRightClimbEncoder = frontRightClimb.getEncoder();
+        backLeftClimbEncoder = backLeftClimb.getEncoder();
+        backRightClimbEncoder = backRightClimb.getEncoder();
        // NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
     }
 
     @Override
     public void robotPeriodic() {
         //leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
-        leftFrontClimbEncoderValue += resetEncoderValue(leftFrontClimbEncoder);
-        rightFrontClimbEncoderValue += resetEncoderValue(rightFrontClimbEncoder);
-        leftBackClimbEncoderValue += resetEncoderValue(leftBackClimbEncoder);
-        rightBackClimbEncoderValue += resetEncoderValue(rightBackClimbEncoder);
+        frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
+        frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
+        backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
+        backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
     }
 
     public double resetEncoderValue(RelativeEncoder encoder) {
@@ -239,13 +239,13 @@ public class Robot extends TimedRobot {
         
         if (joystick.getRawButton(3)) {
             //Step 1: Extend back arms up
-            leftBackClimbEncoder.setPosition(0);
-            leftBackClimbEncoder.setPosition(0);
-            while (leftBackClimbEncoder.getPosition() < 5000){
-                leftBackClimb.set(0.8);
+            backLeftClimbEncoder.setPosition(0);
+            backLeftClimbEncoder.setPosition(0);
+            while (backLeftClimbEncoder.getPosition() < 5000){
+                backLeftClimb.set(0.8);
             }
-            while (rightBackClimbEncoder.getPosition() < 5000){
-                rightBackClimb.set(0.8);
+            while (backRightClimbEncoder.getPosition() < 5000){
+                backRightClimb.set(0.8);
             }
         }
 
@@ -256,22 +256,22 @@ public class Robot extends TimedRobot {
         if (commenceHang) {
             //Step 2: Move back arms down to winch them
             if (hangStep == 0){
-                if (leftBackClimbEncoder.getPosition() > 4000 || leftBackClimbEncoder.getPosition() > 4000) {
-                    if (leftBackClimbEncoder.getPosition() > 4000) { leftBackClimb.set(-0.5); }
-                    if (rightBackClimbEncoder.getPosition() > 4000) { rightBackClimb.set(-0.5); }
+                if (backLeftClimbEncoder.getPosition() > 4000 || backLeftClimbEncoder.getPosition() > 4000) {
+                    if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
+                    if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
                 }
                 hangStep++;
             }
             //Step 3: Extend front arms up
             if (hangStep == 1){
-                leftFrontClimbEncoder.setPosition(0);
-                rightFrontClimbEncoder.setPosition(0);
-                if (leftFrontClimbEncoder.getPosition() < 6000 || rightFrontClimbEncoder.getPosition() < 6000){
-                    if (leftFrontClimbEncoder.getPosition() < 6000){
-                        leftFrontClimb.set(0.8);
+                frontLeftClimbEncoder.setPosition(0);
+                frontRightClimbEncoder.setPosition(0);
+                if (frontLeftClimbEncoder.getPosition() < 6000 || frontRightClimbEncoder.getPosition() < 6000){
+                    if (frontLeftClimbEncoder.getPosition() < 6000){
+                        frontLeftClimb.set(0.8);
                     }
-                    if (rightFrontClimbEncoder.getPosition() < 6000){
-                        rightFrontClimb.set(0.8);
+                    if (frontRightClimbEncoder.getPosition() < 6000){
+                        frontRightClimb.set(0.8);
                     }
                 hangStep++;
                 }
@@ -288,17 +288,17 @@ public class Robot extends TimedRobot {
             
             //Steps 6 and 7:  Rotate the robot back to an upright position + release the weight on the back arms
             if (hangStep == 3){
-                if (leftBackClimbEncoder.getPosition() < 5000 || leftBackClimbEncoder.getPosition() < 5000) {
-                    if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(0.5); leftFrontClimb.set(-0.5); }
-                    if (rightBackClimbEncoder.getPosition() < 5000) { rightBackClimb.set(0.5); leftFrontClimb.set(-0.5); }
+                if (backLeftClimbEncoder.getPosition() < 5000 || backLeftClimbEncoder.getPosition() < 5000) {
+                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(0.5); frontLeftClimb.set(-0.5); }
+                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(0.5); frontLeftClimb.set(-0.5); }
                 }
                 hangStep++;
             }
             //Step 8: Extend the back arms so they are un-winched
             if (hangStep == 4){
-                if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
-                    if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
-                    if (rightBackClimbEncoder.getPosition() < 6000) { rightBackClimb.set(0.5); }
+                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
+                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
+                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
                 }
                 hangStep++;
             }  
@@ -311,9 +311,9 @@ public class Robot extends TimedRobot {
             }
             //Step 10: Slightly shrink the back arms for rotation
             if (hangStep == 6){
-                if (leftBackClimbEncoder.getPosition() > 4000 || rightBackClimbEncoder.getPosition() > 4000) {
-                    if (leftBackClimbEncoder.getPosition() > 4000) { leftBackClimb.set(-0.5); }
-                    if (rightBackClimbEncoder.getPosition() > 4000) { rightBackClimb.set(-0.5); }
+                if (backLeftClimbEncoder.getPosition() > 4000 || backRightClimbEncoder.getPosition() > 4000) {
+                    if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
+                    if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
                 }
                 hangStep++;
             }
@@ -326,9 +326,9 @@ public class Robot extends TimedRobot {
             } 
             //Step 12: Extend the back arms to the height of the traversal bar 
             if (hangStep == 8){
-                if (leftBackClimbEncoder.getPosition() < 6000 || leftBackClimbEncoder.getPosition() < 6000) {
-                    if (leftBackClimbEncoder.getPosition() < 6000) { leftBackClimb.set(0.5); }
-                    if (rightBackClimbEncoder.getPosition() < 6000) { rightBackClimb.set(0.5); }
+                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
+                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
+                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
                 }
                 hangStep++;
 
@@ -342,9 +342,9 @@ public class Robot extends TimedRobot {
             }
             //Step 14: Same as step 6 to bring the robot into an upright position
             if (hangStep == 10){
-                if (leftBackClimbEncoder.getPosition() > 5500 || leftBackClimbEncoder.getPosition() > 5500) {
-                    if (leftBackClimbEncoder.getPosition() < 5000) { leftBackClimb.set(-0.5); leftFrontClimb.set(0.5); }
-                    if (rightBackClimbEncoder.getPosition() < 5000) { rightBackClimb.set(-0.5); leftFrontClimb.set(0.5); }
+                if (backLeftClimbEncoder.getPosition() > 5500 || backLeftClimbEncoder.getPosition() > 5500) {
+                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(-0.5); frontLeftClimb.set(0.5); }
+                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(-0.5); frontLeftClimb.set(0.5); }
                 }
                 hangStep++;
             }
