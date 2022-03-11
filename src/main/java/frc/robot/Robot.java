@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
         
         frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
         frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
-        backLeftClimb = new CANSparkMax(1, MotorType.kBrushless);
+        backLeftClimb = new CANSparkMax(8, MotorType.kBrushless);
         backRightClimb = new CANSparkMax(3, MotorType.kBrushless);
         leadScrews = new Spark(0);
 
@@ -169,7 +169,7 @@ public class Robot extends TimedRobot {
         } else if (power < 0.018){
             return -1 * (Math.log(1 / (power + 1) - 1) / 8) - 0.5;
         }
-        return 0;
+        return 0.0;
     }
 
     
@@ -207,8 +207,8 @@ public class Robot extends TimedRobot {
             intakeBrush.set(0.8);
         }
         //Transfer
-        if (joystick.getRawButton(5)){
-            transferToOuttake.set(0.8);
+        if (joystick.getRawButton(5)) {
+            transferToOuttake.set(-0.8);
         }
 
         // Default manual Drive Values
@@ -244,7 +244,8 @@ public class Robot extends TimedRobot {
         //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        myDrive.tankDrive(calcDriveCurve(-joystickLValue), calcDriveCurve(-joystickRValue), false);
+        
+        myDrive.tankDrive(calcDriveCurve(joystickLValue), calcDriveCurve(-joystickRValue), false);
 
         //Hang Code
         
