@@ -100,13 +100,13 @@ public class Robot extends TimedRobot {
         );
 
         leftBank = new MotorControllerGroup(
-            new CANSparkMax(7, MotorType.kBrushless),
+            new CANSparkMax(1, MotorType.kBrushless),
             new CANSparkMax(4, MotorType.kBrushless)
         );
         
         frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
         frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
-        backLeftClimb = new CANSparkMax(8, MotorType.kBrushless);
+        backLeftClimb = new CANSparkMax(7, MotorType.kBrushless);
         backRightClimb = new CANSparkMax(3, MotorType.kBrushless);
         leadScrews = new Spark(0);
 
@@ -150,8 +150,29 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         //myDrive.tankDrive(0.1, -0.1);
-        intakeBrush.set(0.2);
-        intakeComp.set(0.2);
+       //Intake//
+       //intakeBrush.set(-1);
+       //intakeComp.set(-1);
+
+        //Outtake
+        transferToOuttake.set(-0.6);
+        //lowOuttake.set(-0.55);
+        //highOuttake.set(0.6);
+        //outtakeRotator.set(-0.2);
+        //myDrive.tankDrive(0.1, -0.1, false);
+
+        //Drive
+        //leftBank.set(0.2);
+        //rightBank.set(-0.2);
+
+        //Hang
+        //frontLeftClimb.set(0.2);
+        //frontRightClimb.set(0.2);
+        //backLeftClimb.set(0.2);
+        //backRightClimb.set(0.2);
+        //leadScrews.set(0.05);
+
+
     }
 
     @Override
@@ -163,7 +184,7 @@ public class Robot extends TimedRobot {
         
     }
 
-    public double calcDriveCurve(double power) {
+   /* public double calcDriveCurve(double power) {
         if (power > 0.018) {
             return -1 * (Math.log(1 / (power + 0) - 1) / 8) + 0.5;
         } else if (power < 0.018){
@@ -171,6 +192,7 @@ public class Robot extends TimedRobot {
         }
         return 0.0;
     }
+    */
 
     
 
@@ -188,16 +210,16 @@ public class Robot extends TimedRobot {
         }
         */
         //Update_Limelight_Tracking();
-        boolean auto = joystick.getRawButton(1);
-        leftBank.setVoltage(12);
-        rightBank.setVoltage(12);
-        long now = System.currentTimeMillis();
+        //boolean auto = joystick.getRawButton(1);
+        //leftBank.setVoltage(12);
+        //rightBank.setVoltage(12);
+        //long now = System.currentTimeMillis();
         // Turning speed limit
-        double limitTurnSpeed = 0.75; // EDITABLE VALUE
+        double limitTurnSpeed = 0.5; // EDITABLE VALUE
 
         //Outtake
-        if (joystick.getRawButton(1)) {
-            myDrive.tankDrive(0, 0);
+        /*if (joystick.getRawButton(1)) {
+            //myDrive.tankDrive(0, 0);
             highOuttake.set(joystick.getRawAxis(1) * 0.5);
             lowOuttake.set(joystick.getRawAxis(1) * 0.5);
         }
@@ -210,7 +232,7 @@ public class Robot extends TimedRobot {
         if (joystick.getRawButton(5)) {
             transferToOuttake.set(-0.8);
         }
-
+        */
         // Default manual Drive Values
         double joystickLValue =
                 (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
@@ -237,26 +259,26 @@ public class Robot extends TimedRobot {
         
         
         // Forgive a slight turn
-        if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
-            joystickLValue = joystickRValue;
-        }
+       // if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
+         //   joystickLValue = joystickRValue;
+        //}
         //double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
         //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
         
-        myDrive.tankDrive(calcDriveCurve(joystickLValue), calcDriveCurve(-joystickRValue), false);
+        myDrive.tankDrive(joystickLValue, -joystickRValue);
 
         //Hang Code
-        
+        /*
         if (joystick.getRawButton(3)) {
             //Step 1: Extend back arms up
             backLeftClimbEncoder.setPosition(0);
             backLeftClimbEncoder.setPosition(0);
-            while (backLeftClimbEncoder.getPosition() < 5000){
+            while (backLeftClimbEncoder.getPosition() < 500){
                 backLeftClimb.set(0.8);
             }
-            while (backRightClimbEncoder.getPosition() < 5000){
+            while (backRightClimbEncoder.getPosition() < 500){
                 backRightClimb.set(0.8);
             }
         }
@@ -361,7 +383,7 @@ public class Robot extends TimedRobot {
                 hangStep++;
             }
         }
-        
+        */
 
     }
 
@@ -449,6 +471,3 @@ public class Robot extends TimedRobot {
         return new double[]{leftPowerOutput, rightPowerOutput};
       }
       */
-    
-
-   
