@@ -275,13 +275,194 @@ public class Robot extends TimedRobot {
         // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
 
         int stage = 1;
+        // assumes that the back set (S2) of arms are slightly tilted towards the back (front set is referred to as S1)
         if( joystick.getRawButtonPressed( 4 ) ) {
-            if( stage == 1 ) {
+            if( stage == 1 ) { // extends S2 in front of bar 2
                 if( !encoderValueHold1 && !encoderValueHold1 ) {
                     encoderValueHold1 = backLeftClimbEncoder.getPosition();
                     encoderValueHold2 = backRightClimbEncoder.getPosition();
                 }
-                if( extset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* encoder target value */, /* speed */ ) && extset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, 0.4 ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, 0.4 ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 2 ) { // slight rotates S2's hooks to be above bar 2
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 3 ) { // retracts S2 to hook onto bar 2 and pull the robot up
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 4 ) { // rotates the robot so S1 is in a position to extend above but not run into bar 3
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 5 ) { // extends S1 above bar 3
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 6 ) { // rotates the robot slightly, so that when S1 retracts, it hooks onto bar 3
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 7 ) { // retracts S1 slightly, to grip onto bar 3 in preparation for extending S2
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 8 ) { // extend S2, enough so that it unhooks from bar 2
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 9 ) { // rotate robot slightly so S2 hooks can retract
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 10 ) { // retracts S2 to clear bar 2, so it can rotate to be in position to grab bar 4
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 11 ) { // rotate S2 so that when it extends after S1 retracts, the hook does not run into bar 4
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 12 ) { // retract S1 to prepare for grabbing bar 4
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 13 ) { // extend S2 so that when it rotates, the hook is slightly beyond bar 4
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 14 ) { // slightly rotate S2 to prepare for hooking onto bar 4
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 15 ) { // slightly retract S2, to hook onto bar 4 and prepare to unhook from bar 3
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( motionset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 16 ) { // extend S1, enough so that it unhooks from bar 3
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 17 ) { // rotate robot slightly, so that S1 can retract
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 18 ) { // retract S1 so it may clear bar 3 in rotating to a stable position
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            } else if( stage == 19 ) { // rotate the robot into a normal position
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = /* encoder */.getPosition();
+                    encoderValueHold2 = /* encoder */.getPosition();
+                }
+                if( motionset( /* motor */, /* encoder */, encoderValueHold1, /* relative encoder target value */, /* speed */ ) && motionset( /* motor */, /* encoder */, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
                     encoderValueHold1 = null;
                     encoderValueHold2 = null;
                     stage++;
@@ -412,7 +593,7 @@ public class Robot extends TimedRobot {
     }
 
     public boolean motionset( motorObject, encoderObject, encoderInitialValue, relativeEncoderTargetValue, speed ) { // returns the status of the movement: false if target not yet reached & vice versa
-        if( encoderInitialValue > relativeEncoderTargetValue && encoderObject.getPosition() > relativeEncoderTargetValue || encoderInitialValue < relativeEncoderTargetValue && encoderObject.getPosition() < relativeEncoderTargetValue ) {
+        if( encoderInitialValue > encoderInitialValue + relativeEncoderTargetValue && encoderObject.getPosition() > encoderInitialValue + relativeEncoderTargetValue || encoderInitialValue < encoderInitialValue + relativeEncoderTargetValue && encoderObject.getPosition() < encoderInitialValue + relativeEncoderTargetValue ) {
             if( motorObject.get() != speed ) motorObject.set( speed );
             return false;
         } else {
