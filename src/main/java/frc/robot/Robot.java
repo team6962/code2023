@@ -141,12 +141,12 @@ public class Robot extends TimedRobot {
         */
         //Update_Limelight_Tracking();
         //boolean auto = joystick.getRawButton(1);
-        //leftBank.setVoltage(12);
-        //rightBank.setVoltage(12);
+        // leftBank.setVoltage(12.0);
+        // rightBank.setVoltage(12.0);
         //long now = System.currentTimeMillis();
         // Turning speed limit
-        double limitTurnSpeed = 0.5; // EDITABLE VALUE
-
+        double limitTurnSpeed = 0.75; // EDITABLE VALUE
+        double limitDriveSpeed = 0.75;
         //Outtake
         /*if (joystick.getRawButton(1)) {
             //myDrive.tankDrive(0, 0);
@@ -164,6 +164,8 @@ public class Robot extends TimedRobot {
         }
         */
         // Default manual Drive Values
+        System.out.println(joystick.getRawAxis(2));
+
         double joystickLValue =
                 (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
         double joystickRValue =
@@ -189,16 +191,16 @@ public class Robot extends TimedRobot {
         
         
         // Forgive a slight turn
-       // if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
-         //   joystickLValue = joystickRValue;
-        //}
+        if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
+            joystickLValue = joystickRValue;
+        }
         //double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
         //double[] test2 = getDrivePower(test[0], test[1], 50);
 
         // Actual Drive code
-        
-        myDrive.tankDrive(joystickLValue, -joystickRValue);
-
+        // System.out.println(joystickLValue);
+        // System.out.println(joystickRValue);
+        // myDrive.tankDrive((joystickLValue) * limitDriveSpeed, (joystickRValue) * limitDriveSpeed);
         //Hang Code
         /*
         if (joystick.getRawButton(3)) {
