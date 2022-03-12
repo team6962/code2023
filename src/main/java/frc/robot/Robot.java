@@ -87,6 +87,8 @@ public class Robot extends TimedRobot {
     double backLeftClimbEncoderValue;
     double backRightClimbEncoderValue;
 
+    double transferToOuttakePower = -0.6;
+
     final int WIDTH = 640;
     
     @Override
@@ -149,30 +151,11 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousPeriodic() {
-        //myDrive.tankDrive(0.1, -0.1);
-       //Intake//
-       //intakeBrush.set(-1);
-       //intakeComp.set(-1);
+        
+    }
 
-        //Outtake
-        transferToOuttake.set(-0.6);
-        //lowOuttake.set(-0.55);
-        //highOuttake.set(0.6);
-        //outtakeRotator.set(-0.2);
-        //myDrive.tankDrive(0.1, -0.1, false);
-
-        //Drive
-        //leftBank.set(0.2);
-        //rightBank.set(-0.2);
-
-        //Hang
-        //frontLeftClimb.set(0.2);
-        //frontRightClimb.set(0.2);
-        //backLeftClimb.set(0.2);
-        //backRightClimb.set(0.2);
-        //leadScrews.set(0.05);
-
-
+    public void doIntakeTransfer() {
+        transferToOuttake.set(transferToOuttakePower);
     }
 
     @Override
@@ -184,20 +167,35 @@ public class Robot extends TimedRobot {
         
     }
 
-   /* public double calcDriveCurve(double power) {
-        if (power > 0.018) {
-            return -1 * (Math.log(1 / (power + 0) - 1) / 8) + 0.5;
-        } else if (power < 0.018){
-            return -1 * (Math.log(1 / (power + 1) - 1) / 8) - 0.5;
+   public double calcDriveCurve(double power) {
+        double harshness = 8.0;
+
+        if (power >= 1.0) {
+            power = 0.99;
+        }
+        if (power <= -1.0) {
+            power = -0.99;
+        }
+        if (power == 0.0) {
+            return 0.0;
+        }
+        if (power > 0.0) {
+            return Math.min(1.0, Math.max(0.0, -1 * (Math.log(1 / (power + 0) - 1) / harshness) + 0.5));
+        }
+        if (power < 0.0) {
+            return Math.max(-1.0, Math.min(0.0, -1 * (Math.log(1 / (power + 1) - 1) / harshness) - 0.5));
         }
         return 0.0;
     }
-    */
-
     
 
     @Override
     public void teleopPeriodic() {
+
+        if (joystick.getRawButtonPressed(1)) {
+            doIntakeTransfer();
+        }
+
         //Toggle seeking red or blue balls
        /* if (m_stick.getRawButtonPressed(8)) {
             System.out.println("Seeking Blue");
