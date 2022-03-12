@@ -98,308 +98,34 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         //start = System.currentTimeMillis();
-
-
         
     }
 
-   public double calcDriveCurve(double power) {
-        double harshness = 8.0;
-
-        if (power >= 1.0) {
-            power = 0.99;
-        }
-        if (power <= -1.0) {
-            power = -0.99;
-        }
-        if (power == 0.0) {
-            return 0.0;
-        }
-        if (power > 0.0) {
-            return Math.min(1.0, Math.max(0.0, -1 * (Math.log(1 / (power + 0) - 1) / harshness) + 0.5));
-        }
-        if (power < 0.0) {
-            return Math.max(-1.0, Math.min(0.0, -1 * (Math.log(1 / (power + 1) - 1) / harshness) - 0.5));
-        }
-        return 0.0;
+    public double calcDriveCurve(double power) {
+        return power * Math.abs(power);
     }
     
 
     @Override
     public void teleopPeriodic() {
-
-        //Toggle seeking red or blue balls
-       /* if (m_stick.getRawButtonPressed(8)) {
-            System.out.println("Seeking Blue");
-            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
-        }
-      
-        if (m_stick.getRawButtonPressed(9)) {
-            System.out.println("Seeking Red");
-            NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_red);
-        }
-        */
-        //Update_Limelight_Tracking();
-        //boolean auto = joystick.getRawButton(1);
-        // leftBank.setVoltage(12.0);
-        // rightBank.setVoltage(12.0);
-        //long now = System.currentTimeMillis();
-        // Turning speed limit
-        double limitTurnSpeed = 0.75; // EDITABLE VALUE
+        double limitTurnSpeed = 0.75;
         double limitDriveSpeed = 0.75;
-        //Outtake
-        /*if (joystick.getRawButton(1)) {
-            //myDrive.tankDrive(0, 0);
-            highOuttake.set(joystick.getRawAxis(1) * 0.5);
-            lowOuttake.set(joystick.getRawAxis(1) * 0.5);
+
+        double turnValue = joystick.getRawAxis(2) * limitTurnSpeed;
+        if (Math.abs(turnValue) < 0.1) {
+            turnValue = 0.0;
         }
-        //Intake
-        if (joystick.getRawButton(2)) {
-            intakeComp.set(0.8);
-            intakeBrush.set(0.8);
-        }
-        //Transfer
-        if (joystick.getRawButton(5)) {
-            transferToOuttake.set(-0.8);
-        }
-        */
-        // Default manual Drive Values
-        System.out.println(joystick.getRawAxis(2));
 
         double joystickLValue =
-                (-joystick.getRawAxis(1) + (joystick.getRawAxis(2) * limitTurnSpeed));
+            Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(1) + (turnValue))));
         double joystickRValue =
-                (-joystick.getRawAxis(1) - (joystick.getRawAxis(2) * limitTurnSpeed));
-
-        // ADDITIONAL DRIVE CODE HERE
-        /*
-        if (auto)
-        {
-            if (m_LimelightHasValidTarget)
-            {
-                System.out.println("Auto Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
-                m_robotDrive.arcadeDrive(m_LimelightDriveCommand,m_LimelightSteerCommand);
-            }
-            else
-            {
-            //System.out.println("Auto but no target! Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
-            m_robotDrive.arcadeDrive(0.0, 0.5);
-            }
-        }
-        */
-
+            Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(1) - (turnValue))));
         
-        
-        // Forgive a slight turn
-        if (joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2) {
-            joystickLValue = joystickRValue;
-        }
-        //double[] test = joystickToRPS(-joystick.getRawAxis(1), -joystick.getRawAxis(2));
-        //double[] test2 = getDrivePower(test[0], test[1], 50);
+        System.out.println(calcDriveCurve(joystickLValue) * limitDriveSpeed);
 
-        // Actual Drive code
-        // System.out.println(joystickLValue);
-        // System.out.println(joystickRValue);
-        // myDrive.tankDrive((joystickLValue) * limitDriveSpeed, (joystickRValue) * limitDriveSpeed);
-        //Hang Code
-        /*
-        if (joystick.getRawButton(3)) {
-            //Step 1: Extend back arms up
-            backLeftClimbEncoder.setPosition(0);
-            backLeftClimbEncoder.setPosition(0);
-            while (backLeftClimbEncoder.getPosition() < 500){
-                backLeftClimb.set(0.8);
-            }
-            while (backRightClimbEncoder.getPosition() < 500){
-                backRightClimb.set(0.8);
-            }
-        }
-
-        if (joystick.getRawButton(4)){
-            commenceHang = true;
-        }
-
-        if (commenceHang) {
-            //Step 2: Move back arms down to winch them
-            if (hangStep == 0){
-                if (backLeftClimbEncoder.getPosition() > 4000 || backLeftClimbEncoder.getPosition() > 4000) {
-                    if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
-                    if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
-                }
-                hangStep++;
-            }
-            //Step 3: Extend front arms up
-            if (hangStep == 1){
-                frontLeftClimbEncoder.setPosition(0);
-                frontRightClimbEncoder.setPosition(0);
-                if (frontLeftClimbEncoder.getPosition() < 6000 || frontRightClimbEncoder.getPosition() < 6000){
-                    if (frontLeftClimbEncoder.getPosition() < 6000){
-                        frontLeftClimb.set(0.8);
-                    }
-                    if (frontRightClimbEncoder.getPosition() < 6000){
-                        frontRightClimb.set(0.8);
-                    }
-                hangStep++;
-                }
-            }
-            //Step 4 and 5: Rotate the robot + winch the front arms on to the high bar
-            if (hangStep == 2){
-                leadScrewsEncoder.reset();
-                if (leadScrewsEncoder.getDistance() < 35) {
-                    leadScrews.set(0.5);
-                
-                }
-                hangStep++;
-            }
-            
-            //Steps 6 and 7:  Rotate the robot back to an upright position + release the weight on the back arms
-            if (hangStep == 3){
-                if (backLeftClimbEncoder.getPosition() < 5000 || backLeftClimbEncoder.getPosition() < 5000) {
-                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(0.5); frontLeftClimb.set(-0.5); }
-                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(0.5); frontLeftClimb.set(-0.5); }
-                }
-                hangStep++;
-            }
-            //Step 8: Extend the back arms so they are un-winched
-            if (hangStep == 4){
-                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
-                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-                }
-                hangStep++;
-            }  
-            //Step 9: Rotate the back arms so that they are hovering over the traversal bar
-            if (hangStep == 5){
-                if (leadScrewsEncoder.getDistance() > 25) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            }
-            //Step 10: Slightly shrink the back arms for rotation
-            if (hangStep == 6){
-                if (backLeftClimbEncoder.getPosition() > 4000 || backRightClimbEncoder.getPosition() > 4000) {
-                    if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
-                    if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
-                }
-                hangStep++;
-            }
-            //Step 11: Rotate the back arms into a position to grab the traversal bar (slightly lesss)
-            if (hangStep == 7){
-                if (leadScrewsEncoder.getDistance() > -20) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            } 
-            //Step 12: Extend the back arms to the height of the traversal bar 
-            if (hangStep == 8){
-                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
-                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-                }
-                hangStep++;
-
-            }
-            //Step 13: Rotate the back arms so they latch on to the traversal bar
-            if (hangStep == 9){
-                if (leadScrewsEncoder.getDistance() > -28) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            }
-            //Step 14: Same as step 6 to bring the robot into an upright position
-            if (hangStep == 10){
-                if (backLeftClimbEncoder.getPosition() > 5500 || backLeftClimbEncoder.getPosition() > 5500) {
-                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(-0.5); frontLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(-0.5); frontLeftClimb.set(0.5); }
-                }
-                hangStep++;
-            }
-        }
-        */
-
+        myDrive.tankDrive(calcDriveCurve(joystickLValue) * limitDriveSpeed, calcDriveCurve(joystickRValue) * limitDriveSpeed);
     }
 
     @Override
     public void testPeriodic() {}
-/*
-    public void Update_Limelight_Tracking()
-    {
-        // These numbers must be tuned for your Robot!  Be careful!
-        final double STEER_K = 0.06;                    // how hard to turn toward the target (initial 0.03)
-        final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target (initial 0.26)
-        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
-        final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
-        final double MIN_STEER = -0.7;
-        final double MAX_STEER = 0.7;
-
-       /* double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
-        double tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
-        double ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
-        double ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
-
-    if (tv < 1.0)
-        {
-          m_LimelightHasValidTarget = false;
-          m_LimelightDriveCommand = 0.0;
-          m_LimelightSteerCommand = 0.0;
-          return;
-        }
-
-        m_LimelightHasValidTarget = true;
-
-        // Start with proportional steering
-        double steer_cmd = tx * STEER_K;
-
-        // try to drive forward until the target area reaches our desired area
-        double drive_cmd = (DESIRED_TARGET_AREA - ta) * DRIVE_K;
-
-        // don't let the robot drive too fast into the goal
-        if (drive_cmd > MAX_DRIVE)
-        {
-          drive_cmd = MAX_DRIVE;
-        }
-
-        if (steer_cmd > MAX_STEER) {
-          steer_cmd = MAX_STEER;
-        }
-
-        if (steer_cmd < MIN_STEER) {
-          steer_cmd = MIN_STEER;
-        }
-
-        m_LimelightSteerCommand = steer_cmd;
-        m_LimelightDriveCommand = -drive_cmd;
-
-        //System.out.println("Steering Tx=" + tx + " Steer=" + steer_cmd);
-        //System.out.println("Driving Ta=" + ta + " Drive=" + drive_cmd);
-
-        //m_LimelightDriveCommand = 0.0;
-        //m_LimelightSteerCommand = 0.0;
-        
-    }
-    */
-    
-}/*
-    public double[] joystickToRPS(double lateral, double rotational){
-        double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
-        double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
-        if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
-        return new double[]{leftRotationSpeed,rightRotationSpeed};
-    }
-    */
-
-    /*public double[] getDrivePower(double leftRotationSpeed, double rightRotationSpeed, double div) {
-        double encoder1RotationSpeed = (encoderChange[0] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
-        double encoder2RotationSpeed = (encoderChange[1] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
-        double leftPowerOutput = leftPower;
-        double rightPowerOutput = rightPower;
-        if(Math.abs(leftRotationSpeed-encoder1RotationSpeed) >= 1){
-          leftPowerOutput = approx(leftRotationSpeed);
-          rightPowerOutput = approx(rightRotationSpeed);
-        }else{
-          leftPowerOutput += calcDriveCurve(leftRotationSpeed-encoder1RotationSpeed)/div;
-          rightPowerOutput += calcDriveCurve(rightRotationSpeed-encoder2RotationSpeed)/div;
-        }
-        return new double[]{leftPowerOutput, rightPowerOutput};
-      }
-      */
+}
