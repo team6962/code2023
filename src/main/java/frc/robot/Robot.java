@@ -51,6 +51,8 @@ public class Robot extends TimedRobot {
     //Hang
     boolean commenceHang;
     int hangStep;
+    double encoderValueHold1 = null;
+    double encoderValueHold2 = null;
 
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
@@ -267,128 +269,156 @@ public class Robot extends TimedRobot {
         
         myDrive.tankDrive(joystickLValue, -joystickRValue);
 
-        //Hang Code
+        // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
+        // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
+        // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
+        // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
+
+        int stage = 1;
+        if( joystick.getRawButtonPressed( 4 ) ) {
+            if( stage == 1 ) {
+                if( !encoderValueHold1 && !encoderValueHold1 ) {
+                    encoderValueHold1 = backLeftClimbEncoder.getPosition();
+                    encoderValueHold2 = backRightClimbEncoder.getPosition();
+                }
+                if( extset( backLeftClimb, backLeftClimbEncoder, encoderValueHold1, /* encoder target value */, /* speed */ ) && extset( backRightClimb, backRightClimbEncoder, encoderValueHold2, /* encoder target value */, /* speed */ ) ) {
+                    encoderValueHold1 = null;
+                    encoderValueHold2 = null;
+                    stage++;
+                }
+            }
+        }
         
-        if (joystick.getRawButtonPressed(3)) {
-            //Step 1: Extend back arms up
-            backLeftClimbEncoder.setPosition(0);
-            backLeftClimbEncoder.setPosition(0);
-            if (backLeftClimbEncoder.getPosition() < 500 && backRightClimbEncoder.getPosition() < 500){
-                backLeftClimb.set(0.8);
-                backRightClimb.set(0.8);
-            }
-        }
+        // if (joystick.getRawButtonPressed(3)) {
+        //     //Step 1: Extend back arms up
+        //     backLeftClimbEncoder.setPosition(0);
+        //     backLeftClimbEncoder.setPosition(0);
+        //     if (backLeftClimbEncoder.getPosition() < 500 && backRightClimbEncoder.getPosition() < 500){
+        //         backLeftClimb.set(0.8);
+        //         backRightClimb.set(0.8);
+        //     }
+        // }
 
-        if (joystick.getRawButtonPressed(4)){
-            commenceHang = true;
-        }
-        else{
-            commenceHang = false;
-        }
-        if (joystick.getRawButtonPressed(6)){
-            commenceHang = false;
-        }
+        // if (joystick.getRawButtonPressed(4)){
+        //     commenceHang = true;
+        // }
+        // else{
+        //     commenceHang = false;
+        // }
+        // if (joystick.getRawButtonPressed(6)){
+        //     commenceHang = false;
+        // }
 
-        if (commenceHang) {
-            //Step 2: Move back arms down to winch them
-            if (hangStep == 0){
-                if (backLeftClimbEncoder.getPosition() > 4000 || backLeftClimbEncoder.getPosition() > 4000) {
-                    if (backLeftClimbEncoder.getPosition() > 4000 && backRightClimbEncoder.getPosition() > 4000) { 
-                        backLeftClimb.set(-0.5);
-                        backRightClimb.set(-0.5);
-                    }
-                }
-                hangStep++;
-            }
-            //Step 3: Extend front arms up
-            if (hangStep == 1){
-                frontLeftClimbEncoder.setPosition(0);
-                frontRightClimbEncoder.setPosition(0);
-                if (frontLeftClimbEncoder.getPosition() < 6000 || frontRightClimbEncoder.getPosition() < 6000){
-                    if (frontLeftClimbEncoder.getPosition() < 6000){
-                        frontLeftClimb.set(0.8);
-                    }
-                    if (frontRightClimbEncoder.getPosition() < 6000){
-                        frontRightClimb.set(0.8);
-                    }
-                hangStep++;
-                }
-            }
-            //Step 4 and 5: Rotate the robot + winch the front arms on to the high bar
-            if (hangStep == 2){
-                leadScrewsEncoder.reset();
-                if (leadScrewsEncoder.getDistance() < 35) {
-                    leadScrews.set(0.5);
+        // if (commenceHang) {
+        //     //Step 2: Move back arms down to winch them
+        //     if (hangStep == 0){
+        //         if (backLeftClimbEncoder.getPosition() > 4000 || backLeftClimbEncoder.getPosition() > 4000) {
+        //             if (backLeftClimbEncoder.getPosition() > 4000 && backRightClimbEncoder.getPosition() > 4000) { 
+        //                 backLeftClimb.set(-0.5);
+        //                 backRightClimb.set(-0.5);
+        //             }
+        //         }
+        //         hangStep++;
+        //     }
+        //     //Step 3: Extend front arms up
+        //     if (hangStep == 1){
+        //         frontLeftClimbEncoder.setPosition(0);
+        //         frontRightClimbEncoder.setPosition(0);
+        //         if (frontLeftClimbEncoder.getPosition() < 6000 || frontRightClimbEncoder.getPosition() < 6000){
+        //             if (frontLeftClimbEncoder.getPosition() < 6000){
+        //                 frontLeftClimb.set(0.8);
+        //             }
+        //             if (frontRightClimbEncoder.getPosition() < 6000){
+        //                 frontRightClimb.set(0.8);
+        //             }
+        //         hangStep++;
+        //         }
+        //     }
+        //     //Step 4 and 5: Rotate the robot + winch the front arms on to the high bar
+        //     if (hangStep == 2){
+        //         leadScrewsEncoder.reset();
+        //         if (leadScrewsEncoder.getDistance() < 35) {
+        //             leadScrews.set(0.5);
                 
-                }
-                hangStep++;
-            }
+        //         }
+        //         hangStep++;
+        //     }
             
-            //Steps 6 and 7:  Rotate the robot back to an upright position + release the weight on the back arms
-            if (hangStep == 3){
-                if (backLeftClimbEncoder.getPosition() < 5000 || backLeftClimbEncoder.getPosition() < 5000) {
-                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(0.5); frontLeftClimb.set(-0.5); }
-                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(0.5); frontLeftClimb.set(-0.5); }
-                }
-                hangStep++;
-            }
-            //Step 8: Extend the back arms so they are un-winched
-            if (hangStep == 4){
-                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
-                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-                }
-                hangStep++;
-            }  
-            //Step 9: Rotate the back arms so that they are hovering over the traversal bar
-            if (hangStep == 5){
-                if (leadScrewsEncoder.getDistance() > 25) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            }
-            //Step 10: Slightly shrink the back arms for rotation
-            if (hangStep == 6){
-                if (backLeftClimbEncoder.getPosition() > 4000 || backRightClimbEncoder.getPosition() > 4000) {
-                    if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
-                    if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
-                }
-                hangStep++;
-            }
-            //Step 11: Rotate the back arms into a position to grab the traversal bar (slightly lesss)
-            if (hangStep == 7){
-                if (leadScrewsEncoder.getDistance() > -20) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            } 
-            //Step 12: Extend the back arms to the height of the traversal bar 
-            if (hangStep == 8){
-                if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
-                    if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-                }
-                hangStep++;
+        //     //Steps 6 and 7:  Rotate the robot back to an upright position + release the weight on the back arms
+        //     if (hangStep == 3){
+        //         if (backLeftClimbEncoder.getPosition() < 5000 || backLeftClimbEncoder.getPosition() < 5000) {
+        //             if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(0.5); frontLeftClimb.set(-0.5); }
+        //             if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(0.5); frontLeftClimb.set(-0.5); }
+        //         }
+        //         hangStep++;
+        //     }
+        //     //Step 8: Extend the back arms so they are un-winched
+        //     if (hangStep == 4){
+        //         if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
+        //             if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
+        //             if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
+        //         }
+        //         hangStep++;
+        //     }  
+        //     //Step 9: Rotate the back arms so that they are hovering over the traversal bar
+        //     if (hangStep == 5){
+        //         if (leadScrewsEncoder.getDistance() > 25) {
+        //             leadScrews.set(-0.5);
+        //         } 
+        //         hangStep++;
+        //     }
+        //     //Step 10: Slightly shrink the back arms for rotation
+        //     if (hangStep == 6){
+        //         if (backLeftClimbEncoder.getPosition() > 4000 || backRightClimbEncoder.getPosition() > 4000) {
+        //             if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
+        //             if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
+        //         }
+        //         hangStep++;
+        //     }
+        //     //Step 11: Rotate the back arms into a position to grab the traversal bar (slightly lesss)
+        //     if (hangStep == 7){
+        //         if (leadScrewsEncoder.getDistance() > -20) {
+        //             leadScrews.set(-0.5);
+        //         } 
+        //         hangStep++;
+        //     } 
+        //     //Step 12: Extend the back arms to the height of the traversal bar 
+        //     if (hangStep == 8){
+        //         if (backLeftClimbEncoder.getPosition() < 6000 || backLeftClimbEncoder.getPosition() < 6000) {
+        //             if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
+        //             if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
+        //         }
+        //         hangStep++;
 
-            }
-            //Step 13: Rotate the back arms so they latch on to the traversal bar
-            if (hangStep == 9){
-                if (leadScrewsEncoder.getDistance() > -28) {
-                    leadScrews.set(-0.5);
-                } 
-                hangStep++;
-            }
-            //Step 14: Same as step 6 to bring the robot into an upright position
-            if (hangStep == 10){
-                if (backLeftClimbEncoder.getPosition() > 5500 || backLeftClimbEncoder.getPosition() > 5500) {
-                    if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(-0.5); frontLeftClimb.set(0.5); }
-                    if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(-0.5); frontLeftClimb.set(0.5); }
-                }
-                hangStep++;
-            }
-        }
+        //     }
+        //     //Step 13: Rotate the back arms so they latch on to the traversal bar
+        //     if (hangStep == 9){
+        //         if (leadScrewsEncoder.getDistance() > -28) {
+        //             leadScrews.set(-0.5);
+        //         } 
+        //         hangStep++;
+        //     }
+        //     //Step 14: Same as step 6 to bring the robot into an upright position
+        //     if (hangStep == 10){
+        //         if (backLeftClimbEncoder.getPosition() > 5500 || backLeftClimbEncoder.getPosition() > 5500) {
+        //             if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(-0.5); frontLeftClimb.set(0.5); }
+        //             if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(-0.5); frontLeftClimb.set(0.5); }
+        //         }
+        //         hangStep++;
+        //     }
+        // }
         
 
+    }
+
+    public boolean motionset( motorObject, encoderObject, encoderInitialValue, relativeEncoderTargetValue, speed ) { // returns the status of the movement: false if target not yet reached & vice versa
+        if( encoderInitialValue > relativeEncoderTargetValue && encoderObject.getPosition() > relativeEncoderTargetValue || encoderInitialValue < relativeEncoderTargetValue && encoderObject.getPosition() < relativeEncoderTargetValue ) {
+            if( motorObject.get() != speed ) motorObject.set( speed );
+            return false;
+        } else {
+            motorObject.set( 0 );
+            return true;
+        }
     }
 
     @Override
