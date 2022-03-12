@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -53,41 +55,9 @@ public class Robot extends TimedRobot {
     int hangStep;
 
     // Drive Motor Controllers
-    MotorControllerGroup rightBank;
-    MotorControllerGroup leftBank;
+    PWMSparkMax rightBank;
+    Spark leftBank;
     DifferentialDrive myDrive;
-
-    // Climb Motor Controllers
-    CANSparkMax frontLeftClimb;
-    CANSparkMax frontRightClimb;
-    CANSparkMax backLeftClimb;
-    CANSparkMax backRightClimb;
-    Spark leadScrews;
-
-    // Outtake Motor Controllers
-    Spark highOuttake;
-    Spark lowOuttake;
-    Spark transferToOuttake;
-    Spark outtakeRotator;
-
-    // Intake Motor Controllers
-    Spark intakeBrush;
-    Spark intakeComp;
-
-    // Encoders
-    Encoder leadScrewsEncoder;
-    RelativeEncoder frontLeftClimbEncoder;
-    RelativeEncoder frontRightClimbEncoder;
-    RelativeEncoder backLeftClimbEncoder;
-    RelativeEncoder backRightClimbEncoder;
-
-    double leadScrewsEncoderValue;
-    double frontLeftClimbEncoderValue;
-    double frontRightClimbEncoderValue;
-    double backLeftClimbEncoderValue;
-    double backRightClimbEncoderValue;
-
-    double transferToOuttakePower = -0.6;
 
     final int WIDTH = 640;
     
@@ -96,46 +66,17 @@ public class Robot extends TimedRobot {
         // Joystick
         joystick = new Joystick(0);
 
-        rightBank = new MotorControllerGroup(
-            new CANSparkMax(2, MotorType.kBrushless),
-            new CANSparkMax(9, MotorType.kBrushless)
-        );
+        rightBank = new PWMSparkMax(0);
+        leftBank = new Spark(1);
 
-        leftBank = new MotorControllerGroup(
-            new CANSparkMax(1, MotorType.kBrushless),
-            new CANSparkMax(4, MotorType.kBrushless)
-        );
-        
-        frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
-        frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
-        backLeftClimb = new CANSparkMax(7, MotorType.kBrushless);
-        backRightClimb = new CANSparkMax(3, MotorType.kBrushless);
-        leadScrews = new Spark(0);
-
-        highOuttake = new Spark(4);
-        lowOuttake = new Spark(3);
-        transferToOuttake = new Spark(2);
-        outtakeRotator = new Spark(1);
-
-        intakeBrush = new Spark(6);
-        intakeComp = new Spark(5);
         myDrive = new DifferentialDrive(leftBank, rightBank);
 
-        leadScrewsEncoder = new Encoder(0, 1);
-        frontLeftClimbEncoder = frontLeftClimb.getEncoder();
-        frontRightClimbEncoder = frontRightClimb.getEncoder();
-        backLeftClimbEncoder = backLeftClimb.getEncoder();
-        backRightClimbEncoder = backRightClimb.getEncoder();
        // NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
     }
 
     @Override
     public void robotPeriodic() {
-        //leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
-        frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
-        frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
-        backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
-        backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
+       
     }
 
     public double resetEncoderValue(RelativeEncoder encoder) {
@@ -154,15 +95,10 @@ public class Robot extends TimedRobot {
         
     }
 
-    public void doIntakeTransfer() {
-        transferToOuttake.set(transferToOuttakePower);
-    }
-
     @Override
     public void teleopInit() {
         //start = System.currentTimeMillis();
-        boolean commenceHang;
-        int hangStep;
+
 
         
     }
@@ -191,10 +127,6 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-
-        if (joystick.getRawButtonPressed(1)) {
-            doIntakeTransfer();
-        }
 
         //Toggle seeking red or blue balls
        /* if (m_stick.getRawButtonPressed(8)) {
