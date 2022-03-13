@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
 
     // Drive Motor Controllers
     PWMSparkMax rightBank;
-    Spark leftBank;
+    PWMSparkMax leftBank;
     DifferentialDrive myDrive;
 
     final int WIDTH = 640;
@@ -67,7 +67,8 @@ public class Robot extends TimedRobot {
         joystick = new Joystick(0);
 
         rightBank = new PWMSparkMax(0);
-        leftBank = new Spark(1);
+        leftBank = new PWMSparkMax(1);
+        leftBank.setInverted(true);
 
         myDrive = new DifferentialDrive(leftBank, rightBank);
 
@@ -108,7 +109,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        double limitTurnSpeed = 0.75;
+        // 75% wasn't enough, 85% seems to be about right for turning
+        double limitTurnSpeed = 0.85;
         double limitDriveSpeed = 0.75;
 
         double turnValue = joystick.getRawAxis(2) * limitTurnSpeed;
@@ -121,9 +123,15 @@ public class Robot extends TimedRobot {
         double joystickRValue =
             Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(1) - (turnValue))));
         
-        System.out.println(calcDriveCurve(joystickLValue) * limitDriveSpeed);
+        double leftSpeed = calcDriveCurve(joystickLValue) * limitDriveSpeed;
+        double rightSpeed = calcDriveCurve(joystickRValue) * limitDriveSpeed;
 
-        myDrive.tankDrive(calcDriveCurve(joystickLValue) * limitDriveSpeed, calcDriveCurve(joystickRValue) * limitDriveSpeed);
+        // don't log very low values, just when the joystick is actually driving
+        if (leftSpeed > 0.1 || leftSpeed < -0.1 || rightSpeed > 0.1 || rightSpeed < -0.1) {
+            System.out.println("leftSpeed=" + leftSpeed + " rightSpeed=" + rightSpeed);
+        }
+        
+        myDrive.tankDrive(leftSpeed, rightSpeed);
     }
 
     @Override
