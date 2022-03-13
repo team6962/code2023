@@ -139,12 +139,6 @@ public class Robot extends TimedRobot {
         }
     }
 
-    public double resetEncoderValue(RelativeEncoder encoder) {
-        double value = encoder.getPosition();
-        encoder.setPosition(0);
-        return value;
-    }
-
     @Override
     public void autonomousInit() {
         // start = System.currentTimeMillis();
@@ -164,14 +158,13 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-
         detectLimelightDriverMode();
 
         runDrive();
 
         runIntake();
 
-        runOuttake();
+        runOutput();
 
         runTransfer();
 
@@ -180,6 +173,12 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
+    }
+
+    private double resetEncoderValue(RelativeEncoder encoder) {
+        double value = encoder.getPosition();
+        encoder.setPosition(0);
+        return value;
     }
 
     private double calcDriveCurve(double power) {
@@ -203,6 +202,9 @@ public class Robot extends TimedRobot {
         return 0.0;
     }
 
+    /**
+     * Detects which mode the Limelight is in (blue vs red)
+     */
     private void detectLimelightDriverMode() {
         if (enableLimelightDriving) {
             // Toggle seeking red or blue balls
@@ -220,6 +222,9 @@ public class Robot extends TimedRobot {
         }
     }
 
+    /**
+     * Handles teleoperated driving mode.
+     */
     private void teleopDriver() {
         double turnValue = joystick.getRawAxis(2) * limitTurnSpeed;
         if (Math.abs(turnValue) < 0.1) {
@@ -240,6 +245,9 @@ public class Robot extends TimedRobot {
         myDrive.tankDrive(leftSpeed, rightSpeed);
     }
 
+    /**
+     * Handles Limelight autopilot mode.
+     */
     private void limelightAutoDriver() {
         // update the Limelight ball tracking data
         updateLimelightBallTracking();
@@ -256,6 +264,9 @@ public class Robot extends TimedRobot {
         myDrive.arcadeDrive(0.0, 0.5);
     }
 
+    /**
+     * Runs all of the Drive system operations.
+     */
     private void runDrive() {
         if (!enableDrive) {
             myDrive.tankDrive(0.0, 0.0);
@@ -273,7 +284,10 @@ public class Robot extends TimedRobot {
         teleopDriver();
     }
 
-    private void runOuttake() {
+    /**
+     * Runs all of the Output system operations.
+     */
+    private void runOutput() {
         if (!enableOutput) {
             return;
         }
@@ -287,6 +301,9 @@ public class Robot extends TimedRobot {
          */
     }
 
+    /**
+     * Runs all of the Intake system operations.
+     */
     private void runIntake() {
         if (!enableIntake) {
             return;
@@ -298,6 +315,10 @@ public class Robot extends TimedRobot {
         }
     }
 
+    /**
+     * Runs all of the Transfer system operations.
+     * 
+     */
     private void runTransfer() {
         if (!enableTransfer) {
             return;
@@ -310,6 +331,10 @@ public class Robot extends TimedRobot {
          */
     }
 
+    /**
+     * Runs all of the Hang system operations.
+     * 
+     */
     private void runHang() {
         if (!enableHang) {
             return;
@@ -445,6 +470,10 @@ public class Robot extends TimedRobot {
          */
     }
 
+    /**
+     * Runs the Limelight's ball-tracking code.
+     * 
+     */
     private void updateLimelightBallTracking() {
         // DON: I have no idea what these really do, so we should fiddle with them if we
         // need to. - 03/12/22
@@ -500,6 +529,10 @@ public class Robot extends TimedRobot {
 
     }
 
+    /**
+     * Initializes the Main robot (as opposed to the DrivePractice robot)
+     * 
+     */
     private void initMainRobot()
     {
         rightBank = new MotorControllerGroup(
@@ -533,6 +566,10 @@ public class Robot extends TimedRobot {
         myDrive = new DifferentialDrive(leftBank, rightBank);
     }
 
+    /**
+     * Initializes the DrivePractice robot (as opposed to the Main robot)
+     * 
+     */
     private void initDrivePracticeRobot()
     {
         drivePracticeRightController = new PWMSparkMax(0);
