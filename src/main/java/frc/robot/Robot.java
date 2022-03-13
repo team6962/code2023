@@ -53,6 +53,7 @@ public class Robot extends TimedRobot {
     int hangStep;
     double encoderValueHold1 = null;
     double encoderValueHold2 = null;
+    int stage = 1;
 
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
@@ -274,7 +275,6 @@ public class Robot extends TimedRobot {
         // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
         // HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE <===> HANG CODE
 
-        int stage = 1;
         // assumes that the back set (S2) of arms are slightly tilted towards the back (front set is referred to as S1)
         // max encoder rotation of robot for backmost rotating point of 0: 
         // max encoder extension of S1 for lowest starting point of 0: left 454.9; right: 454.9
