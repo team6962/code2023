@@ -188,7 +188,8 @@ public class Robot extends TimedRobot {
 
         intakeBrush = new Spark(5);
         intakeComp = new Spark(6);
-        myDrive = new DifferentialDrive(leftBank, rightBank);
+
+        // myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = new Encoder(0, 1);
         frontLeftClimbEncoder = frontLeftClimb.getEncoder();
@@ -282,7 +283,7 @@ public class Robot extends TimedRobot {
 		double leadScrewSpeed = 0;
 
         // disable driving, but keep updating myDrive to squelch WPI errors in the console
-        myDrive.tankDrive(0.0, 0.0);
+        //myDrive.tankDrive(0.0, 0.0);
 
         /*
 			double frontRightEncoderValue = frontBarL.getPosition();
@@ -475,11 +476,11 @@ public class Robot extends TimedRobot {
 		}
         //Kill Switch
         if (joystick.getRawButtonPressed(12)){
-            System.out.print("Backleft: " + backBarLPos);
-            System.out.print("Back Right: " + backBarRPos);
-            System.out.print("Front Left: " + frontBarLPos);
-            System.out.print("Front Right: " + frontBarRPos);
-            System.out.print("Lead Screw: " + leadScrewPos);
+            System.out.print("Backleft: " + backBarLPos + "\n");
+            System.out.print("Back Right: \n" + backBarRPos + "\n");
+            System.out.print("Front Left: \n" + frontBarLPos + "\n");
+            System.out.print("Front Right: \n" + frontBarRPos + "\n");
+            System.out.print("Lead Screw: \n" + leadScrewPos + "\n");
             hangStepDone = true;
         }
  
