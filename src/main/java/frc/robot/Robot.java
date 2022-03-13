@@ -98,15 +98,15 @@ public class Robot extends TimedRobot {
     boolean hangStepDone = true;
     HangStep[] hangSteps = {
         /* initial arm raise, set back bar to height of 350 */
-        new HangStep(HM.NONE, 0, HM.UP, 350, HM.NONE, 0, true),
+        new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
         /* first lift, list back bar to height of 20*/
         new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
-        new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -90, true),
+        new HangStep(HM.UP, 370, HM.NONE, 0, HM.DOWN, -70, true),
         //Rotate a little more (10 ticks)
         //Change 120
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -110, true),
         //Retract front bar (50 ticks)
         //Change 350
         new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
@@ -118,7 +118,7 @@ public class Robot extends TimedRobot {
         //Lead Screw goes to maxium
         new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
         //rear to 380
-        new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
+        new HangStep(HM.NONE, 0, HM.UP, 440, HM.NONE, 0, true),
         //Lead screw to 170
         new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
         //
@@ -414,10 +414,14 @@ public class Robot extends TimedRobot {
         backBarLPos = backLeftClimbEncoder.getPosition();
         backBarRPos = backRightClimbEncoder.getPosition();
         double frontBarLSpeed = 0;
-        double frontBarRSpeed = 0;
-        double backBarLSpeed = 0;
-        double backBarRSpeed = 0;
-        double leadScrewSpeed = 0;
+		double frontBarRSpeed = 0;
+		double backBarLSpeed = 0;
+		double backBarRSpeed = 0;
+		double leadScrewSpeed = 0;
+
+        // disable driving, but keep updating myDrive to squelch WPI errors in the console
+        myDrive.tankDrive(0.0, 0.0);
+
         /*
          * double frontRightEncoderValue = frontBarL.getPosition();
          * double frontBarRPos = frontBarR.getPosition();
@@ -550,6 +554,7 @@ public class Robot extends TimedRobot {
 
         // Next 5 statements prevent robot going beyond
         // mechanical limits, DO NOT CHNGE
+        /*
         if (frontBarLPos > 450 || frontBarLPos < 0) {
             frontBarLSpeed = 0;
         }
@@ -564,7 +569,7 @@ public class Robot extends TimedRobot {
         }
         if (leadScrewPos > 170 || backBarRPos < -115) {
             leadScrewSpeed = 0;
-        }
+        }*/
  
 		
 		frontLeftClimb.set(frontBarLSpeed);
