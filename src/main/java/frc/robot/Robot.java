@@ -97,36 +97,39 @@ public class Robot extends TimedRobot {
     int hangStep = 0;
     boolean hangStepDone = true;
     HangStep[] hangSteps = {
-            /* initial arm raise, set back bar to height of 350 */
-            new HangStep(HM.NONE, 0, HM.UP, 350, HM.NONE, 0, true),
-            /* first lift, list back bar to height of 20 */
-            new HangStep(HM.NONE, 0, HM.DOWN, 20, HM.NONE, 0, true),
-            /* rotate to allow high hang grab, rotate using lead screw */
-            // Change 400
-            new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -110, true),
-            // Rotate a little more (10 ticks)
-            // Change 120
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -120, true),
-            // Retract front bar (50 ticks)
-            // Change 350
-            new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
-            // Go to zero
-            // Extend Back
-            new HangStep(HM.NONE, 0, HM.UP, 300, HM.NONE, 0, true),
-            // Retract Back to 50
-            new HangStep(HM.DOWN, 100, HM.DOWN, 50, HM.NONE, 0, true),
-            // Lead Screw goes to maxium
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
-            // rear to 380
-            new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
-            // Lead screw to 170
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
-            //
-            new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
+        /* initial arm raise, set back bar to height of 350 */
+        new HangStep(HM.NONE, 0, HM.UP, 350, HM.NONE, 0, true),
+        /* first lift, list back bar to height of 20*/
+        new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
+        /* rotate to allow high hang grab, rotate using lead screw */
+        // Change 400
+        new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -90, true),
+        //Rotate a little more (10 ticks)
+        //Change 120
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
+        //Retract front bar (50 ticks)
+        //Change 350
+        new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
+        //Go to zero
+        //Extend Back
+        new HangStep(HM.NONE, 0, HM.UP, 300, HM.NONE, 0, true),
+        //Retract Back to 50
+        new HangStep(HM.DOWN, 100, HM.DOWN, 50, HM.NONE, 0, true),
+        //Lead Screw goes to maxium
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
+        //rear to 380
+        new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
+        //Lead screw to 170
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
+        //
+        new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
 
-            new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true)
-            // new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, 0, true),
-    };
+        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
+        new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
+
+
+};
 
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
@@ -403,8 +406,8 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        double hangspeed = 0.8;
-        double leadspeed = 0.6;
+        double hangspeed = 0.5;
+        double leadspeed = 0.4;
         leadScrewPos = -leadScrewsEncoder.getDistance();
         frontBarLPos = frontLeftClimbEncoder.getPosition();
         frontBarRPos = frontRightClimbEncoder.getPosition();
@@ -488,67 +491,87 @@ public class Robot extends TimedRobot {
             System.out.print("Lead Screw: " + leadScrewPos);
             hangStepDone = true;
         }
+ 
+		if(!hangStepDone && hangStep < hangSteps.length) {
+			boolean stepDone = true;
+ 
+			
+			/* front bar left*/
+			if(hangSteps[hangStep].frontBar == HM.UP && frontBarLPos < hangSteps[hangStep].frontBarPos) {
+				frontBarLSpeed = hangspeed;
+				stepDone = false;
+			} else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarLPos > hangSteps[hangStep].frontBarPos) {
+				frontBarLSpeed = -hangspeed;
+				stepDone = false;
+			}
+ 
+			/* front bar right */
+			if(hangSteps[hangStep].frontBar == HM.UP && frontBarRPos < hangSteps[hangStep].frontBarPos) {
+				frontBarRSpeed = hangspeed;
+				stepDone = false;
+			} else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarRPos > hangSteps[hangStep].frontBarPos) {
+				frontBarRSpeed = -hangspeed;
+				stepDone = false;
+			}
+ 
+			/* back bar left */
+			if(hangSteps[hangStep].backBar == HM.UP && backBarLPos < hangSteps[hangStep].backBarPos) {
+				backBarLSpeed = hangspeed;
+				stepDone = false;
+			} else if (hangSteps[hangStep].backBar == HM.DOWN && backBarLPos > hangSteps[hangStep].backBarPos) {
+				backBarLSpeed = -hangspeed;
+				stepDone = false;
+			}
+ 
+			/* back bar right */
+			if(hangSteps[hangStep].backBar == HM.UP && backBarRPos < hangSteps[hangStep].backBarPos) {
+				backBarRSpeed = hangspeed;
+				stepDone = false;
+			} else if (hangSteps[hangStep].backBar == HM.DOWN && backBarRPos > hangSteps[hangStep].backBarPos) {
+				backBarRSpeed = -hangspeed;
+				stepDone = false;
+			}
+ 
+			/* lead screw */
+			if(hangSteps[hangStep].leadScrew == HM.UP && leadScrewPos < hangSteps[hangStep].leadScrewPos) {
+				leadScrewSpeed = leadspeed;
+				stepDone = false;
+			} else if (hangSteps[hangStep].leadScrew == HM.DOWN && leadScrewPos > hangSteps[hangStep].leadScrewPos) {
+				leadScrewSpeed = -leadspeed;
+				stepDone = false;
+			}
+ 
+			if(stepDone) {
+				hangStepDone = hangSteps[hangStep].stop;
+				hangStep++;
+			}
+ 
+		}
 
-        if (!hangStepDone && hangStep < hangSteps.length) {
-            boolean stepDone = true;
-
-            /* front bar left */
-            if (hangSteps[hangStep].frontBar == HM.UP && frontBarLPos < hangSteps[hangStep].frontBarPos) {
-                frontBarLSpeed = hangspeed;
-                stepDone = false;
-            } else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarLPos > hangSteps[hangStep].frontBarPos) {
-                frontBarLSpeed = -hangspeed;
-                stepDone = false;
-            }
-
-            /* front bar right */
-            if (hangSteps[hangStep].frontBar == HM.UP && frontBarRPos < hangSteps[hangStep].frontBarPos) {
-                frontBarRSpeed = hangspeed;
-                stepDone = false;
-            } else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarRPos > hangSteps[hangStep].frontBarPos) {
-                frontBarRSpeed = -hangspeed;
-                stepDone = false;
-            }
-
-            /* back bar left */
-            if (hangSteps[hangStep].backBar == HM.UP && backBarLPos < hangSteps[hangStep].backBarPos) {
-                backBarLSpeed = hangspeed;
-                stepDone = false;
-            } else if (hangSteps[hangStep].backBar == HM.DOWN && backBarLPos > hangSteps[hangStep].backBarPos) {
-                backBarLSpeed = -hangspeed;
-                stepDone = false;
-            }
-
-            /* back bar right */
-            if (hangSteps[hangStep].backBar == HM.UP && backBarRPos < hangSteps[hangStep].backBarPos) {
-                backBarRSpeed = hangspeed;
-                stepDone = false;
-            } else if (hangSteps[hangStep].backBar == HM.DOWN && backBarRPos > hangSteps[hangStep].backBarPos) {
-                backBarRSpeed = -hangspeed;
-                stepDone = false;
-            }
-
-            /* lead screw */
-            if (hangSteps[hangStep].leadScrew == HM.UP && leadScrewPos < hangSteps[hangStep].leadScrewPos) {
-                leadScrewSpeed = leadspeed;
-                stepDone = false;
-            } else if (hangSteps[hangStep].leadScrew == HM.DOWN && leadScrewPos > hangSteps[hangStep].leadScrewPos) {
-                leadScrewSpeed = -leadspeed;
-                stepDone = false;
-            }
-
-            if (stepDone) {
-                hangStepDone = hangSteps[hangStep].stop;
-                hangStep++;
-            }
-
+        // Next 5 statements prevent robot going beyond
+        // mechanical limits, DO NOT CHNGE
+        if (frontBarLPos > 450 || frontBarLPos < 0) {
+            frontBarLSpeed = 0;
         }
-
-        frontLeftClimb.set(frontBarLSpeed);
-        frontRightClimb.set(frontBarRSpeed);
-        backLeftClimb.set(backBarLSpeed);
-        backRightClimb.set(backBarRSpeed);
-        leadScrews.set(leadScrewSpeed);
+        if (frontBarRPos > 455 || frontBarRPos < 0) {
+            frontBarRSpeed = 0;
+        }
+        if (backBarLPos > 440 || backBarLPos < 0) {
+            backBarLSpeed = 0;
+        }
+        if (backBarRPos > 455 || backBarRPos < 0) {
+            backBarRSpeed = 0;
+        }
+        if (leadScrewPos > 170 || backBarRPos < -115) {
+            leadScrewSpeed = 0;
+        }
+ 
+		
+		frontLeftClimb.set(frontBarLSpeed);
+		frontRightClimb.set(frontBarRSpeed);
+		backLeftClimb.set(backBarLSpeed);
+		backRightClimb.set(backBarRSpeed);
+		leadScrews.set(leadScrewSpeed);
     }
 
     /**
