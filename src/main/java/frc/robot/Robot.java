@@ -91,7 +91,7 @@ public class Robot extends TimedRobot {
         new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
-        new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -80, true),
+        new HangStep(HM.UP, 370, HM.NONE, 0, HM.DOWN, -70, true),
         //Rotate a little more (10 ticks)
         //Change 120
         new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -110, true),
