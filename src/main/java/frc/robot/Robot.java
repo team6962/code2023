@@ -13,6 +13,38 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
+enum HM {
+    NONE,
+    UP,
+    DOWN
+}
+
+class HangStep {
+    public HM frontBar;
+    public HM backBar;
+    public HM leadScrew;
+
+    public double frontBarPos;
+    public double backBarPos;
+    public double leadScrewPos;
+
+    /* if true stop for user key at end of this step */
+    public boolean stop;
+
+    public HangStep(HM frontBarVal, double frontBarPosVal,
+            HM backBarVal, double backBarPosVal,
+            HM leadScrewVal, double leadScrewPosVal,
+            boolean stopVal) {
+        frontBar = frontBarVal;
+        backBar = backBarVal;
+        leadScrew = leadScrewVal;
+        frontBarPos = frontBarPosVal;
+        backBarPos = backBarPosVal;
+        leadScrewPos = leadScrewPosVal;
+        stop = stopVal;
+    }
+}
+
 public class Robot extends TimedRobot {
     // supported platforms (Main robot and DrivePractice robot)
     private int platformMain = 1;
@@ -46,10 +78,6 @@ public class Robot extends TimedRobot {
     private boolean useShootingLimelight = false;
     private String limelightShootingId = "limelight2";
 
-    // Drive speed limits
-    double limitTurnSpeed = 0.85; // 75% wasn't enough, 85% seems to be about right for turning
-    double limitDriveSpeed = 0.75;
-
     // Joystick
     Joystick joystick;
     private int joystickButtonIntake = 1;
@@ -59,6 +87,46 @@ public class Robot extends TimedRobot {
     private int joystickButtonDrivingAuto = 7;
     private int joystickButtonDrivingSeekBlue = 8;
     private int joystickButtonDrivingSeekRed = 9;
+
+    // Drive speed limits
+    double limitTurnSpeed = 0.85; // 75% wasn't enough, 85% seems to be about right for turning
+    double limitDriveSpeed = 0.75;
+
+    // Hang
+    boolean commenceHang;
+    int hangStep = 0;
+    boolean hangStepDone = true;
+    HangStep[] hangSteps = {
+            /* initial arm raise, set back bar to height of 350 */
+            new HangStep(HM.NONE, 0, HM.UP, 350, HM.NONE, 0, true),
+            /* first lift, list back bar to height of 20 */
+            new HangStep(HM.NONE, 0, HM.DOWN, 20, HM.NONE, 0, true),
+            /* rotate to allow high hang grab, rotate using lead screw */
+            // Change 400
+            new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -110, true),
+            // Rotate a little more (10 ticks)
+            // Change 120
+            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -120, true),
+            // Retract front bar (50 ticks)
+            // Change 350
+            new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
+            // Go to zero
+            // Extend Back
+            new HangStep(HM.NONE, 0, HM.UP, 300, HM.NONE, 0, true),
+            // Retract Back to 50
+            new HangStep(HM.DOWN, 100, HM.DOWN, 50, HM.NONE, 0, true),
+            // Lead Screw goes to maxium
+            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
+            // rear to 380
+            new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
+            // Lead screw to 170
+            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
+            //
+            new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
+
+            new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true)
+            // new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, 0, true),
+    };
 
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
@@ -86,6 +154,8 @@ public class Robot extends TimedRobot {
     Spark intakeBrush;
     Spark intakeComp;
 
+    double start;
+    boolean stopzero;
     // Encoders
     Encoder leadScrewsEncoder;
     RelativeEncoder frontLeftClimbEncoder;
@@ -93,12 +163,11 @@ public class Robot extends TimedRobot {
     RelativeEncoder backLeftClimbEncoder;
     RelativeEncoder backRightClimbEncoder;
 
-    double leadScrewsEncoderValue;
-    double frontLeftClimbEncoderValue;
-    double frontRightClimbEncoderValue;
-    double backLeftClimbEncoderValue;
-    double backRightClimbEncoderValue;
-
+    double leadScrewPos;
+    double frontBarLPos;
+    double frontBarRPos;
+    double backBarLPos;
+    double backBarRPos;
     double transferToOuttakePower = -0.6;
 
     final int WIDTH = 640;
@@ -129,14 +198,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotPeriodic() {
-        // only the Main robot has encoders
-        if (platformMain == platformCurrent) {
-            // leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
-            frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
-            frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
-            backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
-            backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
-        }
+
     }
 
     @Override
@@ -151,7 +213,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
-        // start = System.currentTimeMillis();
+        start = System.currentTimeMillis();
+        boolean commenceHang;
 
         logDisabledSystems();
     }
@@ -340,134 +403,152 @@ public class Robot extends TimedRobot {
             return;
         }
 
+        double hangspeed = 0.8;
+        double leadspeed = 0.6;
+        leadScrewPos = -leadScrewsEncoder.getDistance();
+        frontBarLPos = frontLeftClimbEncoder.getPosition();
+        frontBarRPos = frontRightClimbEncoder.getPosition();
+        backBarLPos = backLeftClimbEncoder.getPosition();
+        backBarRPos = backRightClimbEncoder.getPosition();
+        double frontBarLSpeed = 0;
+        double frontBarRSpeed = 0;
+        double backBarLSpeed = 0;
+        double backBarRSpeed = 0;
+        double leadScrewSpeed = 0;
         /*
-         * if (joystick.getRawButton(joystickButtonExtendHang)) {
-         * //Step 1: Extend back arms up
-         * backLeftClimbEncoder.setPosition(0);
-         * backLeftClimbEncoder.setPosition(0);
-         * while (backLeftClimbEncoder.getPosition() < 500){
-         * backLeftClimb.set(0.8);
-         * }
-         * while (backRightClimbEncoder.getPosition() < 500){
-         * backRightClimb.set(0.8);
-         * }
-         * }
-         * 
-         * if (joystick.getRawButton(joystickButtonCommenceHang)){
-         * commenceHang = true;
-         * }
-         * 
-         * if (commenceHang) {
-         * //Step 2: Move back arms down to winch them
-         * if (hangStep == 0){
-         * if (backLeftClimbEncoder.getPosition() > 4000 ||
-         * backLeftClimbEncoder.getPosition() > 4000) {
-         * if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
-         * if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
-         * }
-         * hangStep++;
-         * }
-         * //Step 3: Extend front arms up
-         * if (hangStep == 1){
-         * frontLeftClimbEncoder.setPosition(0);
-         * frontRightClimbEncoder.setPosition(0);
-         * if (frontLeftClimbEncoder.getPosition() < 6000 ||
-         * frontRightClimbEncoder.getPosition() < 6000){
-         * if (frontLeftClimbEncoder.getPosition() < 6000){
-         * frontLeftClimb.set(0.8);
-         * }
-         * if (frontRightClimbEncoder.getPosition() < 6000){
-         * frontRightClimb.set(0.8);
-         * }
-         * hangStep++;
-         * }
-         * }
-         * //Step 4 and 5: Rotate the robot + winch the front arms on to the high bar
-         * if (hangStep == 2){
-         * leadScrewsEncoder.reset();
-         * if (leadScrewsEncoder.getDistance() < 35) {
-         * leadScrews.set(0.5);
-         * 
-         * }
-         * hangStep++;
-         * }
-         * 
-         * //Steps 6 and 7: Rotate the robot back to an upright position + release the
-         * weight on the back arms
-         * if (hangStep == 3){
-         * if (backLeftClimbEncoder.getPosition() < 5000 ||
-         * backLeftClimbEncoder.getPosition() < 5000) {
-         * if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(0.5);
-         * frontLeftClimb.set(-0.5); }
-         * if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(0.5);
-         * frontLeftClimb.set(-0.5); }
-         * }
-         * hangStep++;
-         * }
-         * //Step 8: Extend the back arms so they are un-winched
-         * if (hangStep == 4){
-         * if (backLeftClimbEncoder.getPosition() < 6000 ||
-         * backLeftClimbEncoder.getPosition() < 6000) {
-         * if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-         * if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-         * }
-         * hangStep++;
-         * }
-         * //Step 9: Rotate the back arms so that they are hovering over the traversal
-         * bar
-         * if (hangStep == 5){
-         * if (leadScrewsEncoder.getDistance() > 25) {
-         * leadScrews.set(-0.5);
-         * }
-         * hangStep++;
-         * }
-         * //Step 10: Slightly shrink the back arms for rotation
-         * if (hangStep == 6){
-         * if (backLeftClimbEncoder.getPosition() > 4000 ||
-         * backRightClimbEncoder.getPosition() > 4000) {
-         * if (backLeftClimbEncoder.getPosition() > 4000) { backLeftClimb.set(-0.5); }
-         * if (backRightClimbEncoder.getPosition() > 4000) { backRightClimb.set(-0.5); }
-         * }
-         * hangStep++;
-         * }
-         * //Step 11: Rotate the back arms into a position to grab the traversal bar
-         * (slightly lesss)
-         * if (hangStep == 7){
-         * if (leadScrewsEncoder.getDistance() > -20) {
-         * leadScrews.set(-0.5);
-         * }
-         * hangStep++;
-         * }
-         * //Step 12: Extend the back arms to the height of the traversal bar
-         * if (hangStep == 8){
-         * if (backLeftClimbEncoder.getPosition() < 6000 ||
-         * backLeftClimbEncoder.getPosition() < 6000) {
-         * if (backLeftClimbEncoder.getPosition() < 6000) { backLeftClimb.set(0.5); }
-         * if (backRightClimbEncoder.getPosition() < 6000) { backRightClimb.set(0.5); }
-         * }
-         * hangStep++;
-         * 
-         * }
-         * //Step 13: Rotate the back arms so they latch on to the traversal bar
-         * if (hangStep == 9){
-         * if (leadScrewsEncoder.getDistance() > -28) {
-         * leadScrews.set(-0.5);
-         * }
-         * hangStep++;
-         * }
-         * //Step 14: Same as step 6 to bring the robot into an upright position
-         * if (hangStep == 10){
-         * if (backLeftClimbEncoder.getPosition() > 5500 ||
-         * backLeftClimbEncoder.getPosition() > 5500) {
-         * if (backLeftClimbEncoder.getPosition() < 5000) { backLeftClimb.set(-0.5);
-         * frontLeftClimb.set(0.5); }
-         * if (backRightClimbEncoder.getPosition() < 5000) { backRightClimb.set(-0.5);
-         * frontLeftClimb.set(0.5); }
-         * }
-         * hangStep++;
-         * }
-         * }
+         * double frontRightEncoderValue = frontBarL.getPosition();
+         * double frontBarRPos = frontBarR.getPosition();
+         * double backBarLPos = backBarL.getPosition();
+         * double backBarRPos = backBarR.getPosition();
+         * double leadScrewPos = leadScrew.getPosition();
          */
+        // Front left forward
+        if (joystick.getRawButton(3)) {
+            frontBarLSpeed = 0.4;
+            System.out.print(frontBarLPos);
+        }
+        // Front left backward
+        if (joystick.getRawButton(4)) {
+            frontBarLSpeed = -0.4;
+            System.out.print(frontBarLPos);
+        }
+        // Front Right Forward
+        if (joystick.getRawButton(5)) {
+            frontBarRSpeed = 0.4;
+            System.out.print(frontBarRPos);
+        }
+        // Front Right Back
+        if (joystick.getRawButton(6)) {
+            frontBarRSpeed = -0.4;
+            System.out.print(frontBarRSpeed);
+        }
+        // Back Left Forward
+        if (joystick.getRawButton(7)) {
+            backBarLSpeed = 0.4;
+            System.out.print(backBarLPos);
+        }
+        // Back Left Back
+        if (joystick.getRawButton(8)) {
+            backBarLSpeed = -0.4;
+            System.out.print(backBarLPos);
+        }
+        // Back Right Forward
+        if (joystick.getRawButton(9)) {
+            backBarRSpeed = 0.4;
+            System.out.print(backBarRPos);
+        }
+        // Back Right Back
+        if (joystick.getRawButton(10)) {
+            backBarRSpeed = -0.4;
+            System.out.print(backBarRPos);
+        }
+        // Lead Screw Forward
+        if (joystick.getRawButton(1)) {
+            leadScrewSpeed = 0.4;
+            System.out.print(leadScrewPos);
+        }
+        // Lead Screw Backwards
+        if (joystick.getRawButton(2)) {
+            leadScrewSpeed = -0.4;
+            System.out.print(leadScrewPos);
+        }
+
+        // Next Step
+        if (hangStepDone && joystick.getRawButtonPressed(11)) {
+            hangStepDone = false;
+            System.out.print("Button 11, hangstepdone: " + hangStepDone + " Hangstep: " + hangStep);
+        }
+
+        // Kill Switch
+        if (joystick.getRawButtonPressed(12)) {
+            System.out.print("Backleft: " + backBarLPos);
+            System.out.print("Back Right: " + backBarRPos);
+            System.out.print("Front Left: " + frontBarLPos);
+            System.out.print("Front Right: " + frontBarRPos);
+            System.out.print("Lead Screw: " + leadScrewPos);
+            hangStepDone = true;
+        }
+
+        if (!hangStepDone && hangStep < hangSteps.length) {
+            boolean stepDone = true;
+
+            /* front bar left */
+            if (hangSteps[hangStep].frontBar == HM.UP && frontBarLPos < hangSteps[hangStep].frontBarPos) {
+                frontBarLSpeed = hangspeed;
+                stepDone = false;
+            } else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarLPos > hangSteps[hangStep].frontBarPos) {
+                frontBarLSpeed = -hangspeed;
+                stepDone = false;
+            }
+
+            /* front bar right */
+            if (hangSteps[hangStep].frontBar == HM.UP && frontBarRPos < hangSteps[hangStep].frontBarPos) {
+                frontBarRSpeed = hangspeed;
+                stepDone = false;
+            } else if (hangSteps[hangStep].frontBar == HM.DOWN && frontBarRPos > hangSteps[hangStep].frontBarPos) {
+                frontBarRSpeed = -hangspeed;
+                stepDone = false;
+            }
+
+            /* back bar left */
+            if (hangSteps[hangStep].backBar == HM.UP && backBarLPos < hangSteps[hangStep].backBarPos) {
+                backBarLSpeed = hangspeed;
+                stepDone = false;
+            } else if (hangSteps[hangStep].backBar == HM.DOWN && backBarLPos > hangSteps[hangStep].backBarPos) {
+                backBarLSpeed = -hangspeed;
+                stepDone = false;
+            }
+
+            /* back bar right */
+            if (hangSteps[hangStep].backBar == HM.UP && backBarRPos < hangSteps[hangStep].backBarPos) {
+                backBarRSpeed = hangspeed;
+                stepDone = false;
+            } else if (hangSteps[hangStep].backBar == HM.DOWN && backBarRPos > hangSteps[hangStep].backBarPos) {
+                backBarRSpeed = -hangspeed;
+                stepDone = false;
+            }
+
+            /* lead screw */
+            if (hangSteps[hangStep].leadScrew == HM.UP && leadScrewPos < hangSteps[hangStep].leadScrewPos) {
+                leadScrewSpeed = leadspeed;
+                stepDone = false;
+            } else if (hangSteps[hangStep].leadScrew == HM.DOWN && leadScrewPos > hangSteps[hangStep].leadScrewPos) {
+                leadScrewSpeed = -leadspeed;
+                stepDone = false;
+            }
+
+            if (stepDone) {
+                hangStepDone = hangSteps[hangStep].stop;
+                hangStep++;
+            }
+
+        }
+
+        frontLeftClimb.set(frontBarLSpeed);
+        frontRightClimb.set(frontBarRSpeed);
+        backLeftClimb.set(backBarLSpeed);
+        backRightClimb.set(backBarRSpeed);
+        leadScrews.set(leadScrewSpeed);
     }
 
     /**
@@ -533,8 +614,7 @@ public class Robot extends TimedRobot {
      * Initializes the Main robot (as opposed to the DrivePractice robot)
      * 
      */
-    private void initMainRobot()
-    {
+    private void initMainRobot() {
         rightBank = new MotorControllerGroup(
                 new CANSparkMax(2, MotorType.kBrushless),
                 new CANSparkMax(9, MotorType.kBrushless));
@@ -542,6 +622,8 @@ public class Robot extends TimedRobot {
         leftBank = new MotorControllerGroup(
                 new CANSparkMax(1, MotorType.kBrushless),
                 new CANSparkMax(4, MotorType.kBrushless));
+
+        myDrive = new DifferentialDrive(leftBank, rightBank);
 
         frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
         frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
@@ -563,15 +645,14 @@ public class Robot extends TimedRobot {
         backLeftClimbEncoder = backLeftClimb.getEncoder();
         backRightClimbEncoder = backRightClimb.getEncoder();
 
-        myDrive = new DifferentialDrive(leftBank, rightBank);
+        stopzero = true;
     }
 
     /**
      * Initializes the DrivePractice robot (as opposed to the Main robot)
      * 
      */
-    private void initDrivePracticeRobot()
-    {
+    private void initDrivePracticeRobot() {
         drivePracticeRightController = new PWMSparkMax(0);
         drivePracticeLeftController = new PWMSparkMax(1);
         drivePracticeLeftController.setInverted(true);
@@ -588,8 +669,7 @@ public class Robot extends TimedRobot {
     /**
      * Log which systems are enabled/disabled for debugging
      */
-    private void logDisabledSystems()
-    {
+    private void logDisabledSystems() {
         if (!enableDrive) {
             System.out.println("Driving DISABLED");
         }
