@@ -337,34 +337,33 @@ public class Robot extends TimedRobot {
         }
         //Hang Code
         
-        if (joystick.getRawButtonPressed(3)) {
+        if (joystick.getRawButton(3)) {
             //Step 1: Extend back arms up
             backLeftClimbEncoder.setPosition(0);
             backLeftClimbEncoder.setPosition(0);
-            if (backLeftClimbEncoder.getPosition() < 500 && backRightClimbEncoder.getPosition() < 500){
-                backLeftClimb.set(0.3);
-                backRightClimb.set(0.3);
+            if (backLeftClimbEncoder.getPosition() < 444 || backRightClimbEncoder.getPosition() < 444){
+                backLeftClimb.set(0.8);
+                backRightClimb.set(0.8);
             }
         }
 
-        if (joystick.getRawButtonPressed(4)){
+        if (joystick.getRawButton(4)){
             commenceHang = true;
         }
         else{
             commenceHang = false;
         }
-        if (joystick.getRawButtonPressed(6)){
+        if (joystick.getRawButton(6)){
             commenceHang = false;
         }
 
         if (commenceHang) {
             //Step 2: Move back arms down to winch them
             if (hangStep == 0){
-                if (backLeftClimbEncoder.getPosition() > 4000 || backLeftClimbEncoder.getPosition() > 4000) {
-                    if (backLeftClimbEncoder.getPosition() > 4000 && backRightClimbEncoder.getPosition() > 4000) { 
-                        backLeftClimb.set(-0.5);
-                        backRightClimb.set(-0.5);
-                    }
+                if (backLeftClimbEncoder.getPosition() > 350 && backRightClimbEncoder.getPosition() > 350) {
+                    backLeftClimb.set(-0.5);
+                    backRightClimb.set(-0.5);
+                    
                 }
                 hangStep++;
             }
