@@ -420,7 +420,7 @@ public class Robot extends TimedRobot {
 		double leadScrewSpeed = 0;
 
         // disable driving, but keep updating myDrive to squelch WPI errors in the console
-        myDrive.tankDrive(0.0, 0.0);
+        //myDrive.tankDrive(0.0, 0.0);
 
         /*
          * double frontRightEncoderValue = frontBarL.getPosition();
@@ -480,19 +480,18 @@ public class Robot extends TimedRobot {
             System.out.print(leadScrewPos);
         }
 
-        // Next Step
-        if (hangStepDone && joystick.getRawButtonPressed(11)) {
-            hangStepDone = false;
-            System.out.print("Button 11, hangstepdone: " + hangStepDone + " Hangstep: " + hangStep);
-        }
-
-        // Kill Switch
-        if (joystick.getRawButtonPressed(12)) {
-            System.out.print("Backleft: " + backBarLPos);
-            System.out.print("Back Right: " + backBarRPos);
-            System.out.print("Front Left: " + frontBarLPos);
-            System.out.print("Front Right: " + frontBarRPos);
-            System.out.print("Lead Screw: " + leadScrewPos);
+        //Next Step
+        if(hangStepDone && joystick.getRawButtonPressed(11)) {
+			hangStepDone = false;
+            System.out.print("Button 11, hangstepdone: "+ hangStepDone + " Hangstep: " + hangStep);
+		}
+        //Kill Switch
+        if (joystick.getRawButtonPressed(12)){
+            System.out.print("Backleft: " + backBarLPos + "\n");
+            System.out.print("Back Right: \n" + backBarRPos + "\n");
+            System.out.print("Front Left: \n" + frontBarLPos + "\n");
+            System.out.print("Front Right: \n" + frontBarRPos + "\n");
+            System.out.print("Lead Screw: \n" + leadScrewPos + "\n");
             hangStepDone = true;
         }
  
@@ -643,16 +642,17 @@ public class Robot extends TimedRobot {
      * 
      */
     private void initMainRobot() {
+
         rightBank = new MotorControllerGroup(
-                new CANSparkMax(2, MotorType.kBrushless),
-                new CANSparkMax(9, MotorType.kBrushless));
+            new CANSparkMax(2, MotorType.kBrushless),
+            new CANSparkMax(9, MotorType.kBrushless)
+        );
 
         leftBank = new MotorControllerGroup(
-                new CANSparkMax(1, MotorType.kBrushless),
-                new CANSparkMax(4, MotorType.kBrushless));
-
-        myDrive = new DifferentialDrive(leftBank, rightBank);
-
+            new CANSparkMax(1, MotorType.kBrushless),
+            new CANSparkMax(4, MotorType.kBrushless)
+        );
+        
         frontLeftClimb = new CANSparkMax(11, MotorType.kBrushless);
         frontRightClimb = new CANSparkMax(5, MotorType.kBrushless);
         backLeftClimb = new CANSparkMax(7, MotorType.kBrushless);
@@ -664,8 +664,10 @@ public class Robot extends TimedRobot {
         transferToOuttake = new Spark(2);
         outtakeRotator = new Spark(1);
 
-        intakeBrush = new Spark(6);
-        intakeComp = new Spark(5);
+        intakeBrush = new Spark(5);
+        intakeComp = new Spark(6);
+
+        // myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = new Encoder(0, 1);
         frontLeftClimbEncoder = frontLeftClimb.getEncoder();
