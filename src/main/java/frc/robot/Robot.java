@@ -75,6 +75,7 @@ public class Robot extends TimedRobot {
     Spark intakeComp;
 
     double start;
+    boolean stopzero;
     // Encoders
     Encoder leadScrewsEncoder;
     RelativeEncoder frontLeftClimbEncoder;
@@ -118,8 +119,8 @@ public class Robot extends TimedRobot {
         transferToOuttake = new Spark(2);
         outtakeRotator = new Spark(1);
 
-        intakeBrush = new Spark(6);
-        intakeComp = new Spark(5);
+        intakeBrush = new Spark(5);
+        intakeComp = new Spark(6);
         myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = new Encoder(0, 1);
@@ -128,6 +129,7 @@ public class Robot extends TimedRobot {
         backLeftClimbEncoder = backLeftClimb.getEncoder();
         backRightClimbEncoder = backRightClimb.getEncoder();
        // NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
+       stopzero = true;
     }
 
     @Override
@@ -154,6 +156,9 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
         System.out.print("here");
         System.out.print("autonstart");
+        intakeComp.set(-1);
+        intakeBrush.set(1);
+        //transferToOuttake.set(-0.8);
     }
 
     /*public void doIntakeTransfer() {
@@ -166,6 +171,7 @@ public class Robot extends TimedRobot {
         start = System.currentTimeMillis();
         boolean commenceHang;
         int hangStep;
+        
 
         
     }
@@ -294,19 +300,40 @@ public class Robot extends TimedRobot {
             backRightClimbEncoder.setPosition(0);
         }
         */
-        if (joystick.getRawButton(9)){
-            leadScrews.set(-0.3);
-            System.out.print("leadback " + leadScrewsEncoder.getDistance());
+        if (joystick.getRawButton(9) && (-leadScrewsEncoder.getDistance() > -115)){
+            leadScrews.set(-0.5);
+            System.out.print("leadback " + -leadScrewsEncoder.getDistance());
         }
-        else if (joystick.getRawButton(7)){
-            leadScrews.set(0.3);
-            System.out.print("leadforward " + leadScrewsEncoder.getDistance());
+        else if (joystick.getRawButton(7) && (-leadScrewsEncoder.getDistance() < 173)){
+            leadScrews.set(0.5);
+            System.out.print("leadforward " + -leadScrewsEncoder.getDistance());
         }
         else{
             leadScrews.set(0);
         }
         if (joystick.getRawButtonPressed(8)){
             leadScrewsEncoder.reset();
+        }
+        if (joystick.getRawButtonPressed(11)){
+            System.out.print("Encoder "+leadScrewsEncoder.getDistance());
+        }
+        if (joystick.getRawButton(12) && stopzero == true){
+            if (-leadScrewsEncoder.getDistance() < 3 && -leadScrewsEncoder.getDistance() > -5){
+                leadScrews.set(0);
+            }
+            if (-leadScrewsEncoder.getDistance() < 0){
+                leadScrews.set(0.3);
+            }
+            else if (-leadScrewsEncoder.getDistance() > 0){
+                leadScrews.set(-0.3);
+            }
+            if (-leadScrewsEncoder.getDistance() > -2 && -leadScrewsEncoder.getDistance() < 2){
+                stopzero = false;
+            }
+                        
+        }
+        else if (joystick.getRawButton(12) == false){
+            stopzero = true;
         }
         //Hang Code
         
