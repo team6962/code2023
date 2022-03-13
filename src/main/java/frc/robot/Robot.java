@@ -88,13 +88,13 @@ public class Robot extends TimedRobot {
         /* initial arm raise, set back bar to height of 350 */
         new HangStep(HM.NONE, 0, HM.UP, 350, HM.NONE, 0, true),
         /* first lift, list back bar to height of 20*/
-        new HangStep(HM.NONE, 0, HM.DOWN, 20, HM.NONE, 0, true),
+        new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
-        new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -110, true),
+        new HangStep(HM.UP, 400, HM.NONE, 0, HM.DOWN, -90, true),
         //Rotate a little more (10 ticks)
         //Change 120
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -120, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
         //Retract front bar (50 ticks)
         //Change 350
         new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
@@ -112,8 +112,9 @@ public class Robot extends TimedRobot {
         //
         new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
 
-        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true)
-        //new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, 0, true),
+        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
+        new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
 
 
 };
@@ -267,8 +268,8 @@ public class Robot extends TimedRobot {
 */
     @Override
     public void teleopPeriodic() {
-        double hangspeed = 0.8;
-        double leadspeed = 0.6;
+        double hangspeed = 0.5;
+        double leadspeed = 0.4;
         leadScrewPos = -leadScrewsEncoder.getDistance();
         frontBarLPos = frontLeftClimbEncoder.getPosition();
         frontBarRPos = frontRightClimbEncoder.getPosition();
@@ -533,6 +534,24 @@ public class Robot extends TimedRobot {
 			}
  
 		}
+
+        // Next 5 statements prevent robot going beyond
+        // mechanical limits, DO NOT CHNGE
+        if (frontBarLPos > 450 || frontBarLPos < 0) {
+            frontBarLSpeed = 0;
+        }
+        if (frontBarRPos > 455 || frontBarRPos < 0) {
+            frontBarRSpeed = 0;
+        }
+        if (backBarLPos > 440 || backBarLPos < 0) {
+            backBarLSpeed = 0;
+        }
+        if (backBarRPos > 455 || backBarRPos < 0) {
+            backBarRSpeed = 0;
+        }
+        if (leadScrewPos > 170 || backBarRPos < -115) {
+            leadScrewSpeed = 0;
+        }
  
 		
 		frontLeftClimb.set(frontBarLSpeed);
