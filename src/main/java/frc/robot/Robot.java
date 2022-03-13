@@ -397,22 +397,6 @@ public class Robot extends TimedRobot {
                 (-joystick.getRawAxis(1) - (joystick.getRawAxis(2) * limitTurnSpeed));
 
         // ADDITIONAL DRIVE CODE HERE
-        /*
-        if (auto)
-        {
-            if (m_LimelightHasValidTarget)
-            {
-                System.out.println("Auto Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
-                m_robotDrive.arcadeDrive(m_LimelightDriveCommand,m_LimelightSteerCommand);
-            }
-            else
-            {
-            //System.out.println("Auto but no target! Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
-            m_robotDrive.arcadeDrive(0.0, 0.5);
-            }
-        }
-        */
-
         
         
         // Forgive a slight turn
@@ -564,85 +548,5 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {}
-/*
-    public void Update_Limelight_Tracking()
-    {
-        // These numbers must be tuned for your Robot!  Be careful!
-        final double STEER_K = 0.06;                    // how hard to turn toward the target (initial 0.03)
-        final double DRIVE_K = 0.26;                    // how hard to drive fwd toward the target (initial 0.26)
-        final double DESIRED_TARGET_AREA = 13.0;        // Area of the target when the robot reaches the wall
-        final double MAX_DRIVE = 0.7;                   // Simple speed limit so we don't drive too fast
-        final double MIN_STEER = -0.7;
-        final double MAX_STEER = 0.7;
-
-       /* double tv = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getDouble(0);
-        double tx = NetworkTableInstance.getDefault().getTable("limelight").getEntry("tx").getDouble(0);
-        double ty = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ty").getDouble(0);
-        double ta = NetworkTableInstance.getDefault().getTable("limelight").getEntry("ta").getDouble(0);
-
-    if (tv < 1.0)
-        {
-          m_LimelightHasValidTarget = false;
-          m_LimelightDriveCommand = 0.0;
-          m_LimelightSteerCommand = 0.0;
-          return;
-        }
-
-        m_LimelightHasValidTarget = true;
-
-        // Start with proportional steering
-        double steer_cmd = tx * STEER_K;
-
-        // try to drive forward until the target area reaches our desired area
-        double drive_cmd = (DESIRED_TARGET_AREA - ta) * DRIVE_K;
-
-        // don't let the robot drive too fast into the goal
-        if (drive_cmd > MAX_DRIVE)
-        {
-          drive_cmd = MAX_DRIVE;
-        }
-
-        if (steer_cmd > MAX_STEER) {
-          steer_cmd = MAX_STEER;
-        }
-
-        if (steer_cmd < MIN_STEER) {
-          steer_cmd = MIN_STEER;
-        }
-
-        m_LimelightSteerCommand = steer_cmd;
-        m_LimelightDriveCommand = -drive_cmd;
-
-        //System.out.println("Steering Tx=" + tx + " Steer=" + steer_cmd);
-        //System.out.println("Driving Ta=" + ta + " Drive=" + drive_cmd);
-
-        //m_LimelightDriveCommand = 0.0;
-        //m_LimelightSteerCommand = 0.0;
-        
-    }
-    */
+}
     
-}/*
-    public double[] joystickToRPS(double lateral, double rotational){
-        double leftRotationSpeed = 5*lateral - (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
-        double rightRotationSpeed = 5*lateral + (((Math.abs(rotational) < 0.2) ? 0 : (rotational/Math.abs(rotational))*(Math.abs(rotational)-0.2))/2);
-        if((leftRotationSpeed < 0.1 && rightRotationSpeed <0.1) && (leftRotationSpeed > -0.1 && rightRotationSpeed > -0.1)) return new double[]{0,0};
-        return new double[]{leftRotationSpeed,rightRotationSpeed};
-    }
-    */
-
-    /*public double[] getDrivePower(double leftRotationSpeed, double rightRotationSpeed, double div) {
-        double encoder1RotationSpeed = (encoderChange[0] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
-        double encoder2RotationSpeed = (encoderChange[1] / 256) / (System.currentTimeMillis() - encoderChangeTime) * 1000; // rotations per sec
-        double leftPowerOutput = leftPower;
-        double rightPowerOutput = rightPower;
-        if(Math.abs(leftRotationSpeed-encoder1RotationSpeed) >= 1){
-          leftPowerOutput = approx(leftRotationSpeed);
-          rightPowerOutput = approx(rightRotationSpeed);
-        }else{
-          leftPowerOutput += calcDriveCurve(leftRotationSpeed-encoder1RotationSpeed)/div;
-          rightPowerOutput += calcDriveCurve(rightRotationSpeed-encoder2RotationSpeed)/div;
-        }
-        return new double[]{leftPowerOutput, rightPowerOutput};
-      }
-      */
