@@ -33,12 +33,12 @@ import java.util.*;
 
 public class Robot extends TimedRobot {
     // Limelight
-    private boolean m_LimelightHasValidTarget = false;
+   /*private boolean m_LimelightHasValidTarget = false;
     private double m_LimelightDriveCommand = 0.0;
     private double m_LimelightSteerCommand = 0.0;
     private int limelight_pipeline_blue = 4;
     private int limelight_pipeline_red = 3;
-
+*/
     //Joystick
     Joystick joystick;
     //private final JoystickButton m_stick_button_blue = new JoystickButton(joystick, 2);
@@ -74,6 +74,7 @@ public class Robot extends TimedRobot {
     Spark intakeBrush;
     Spark intakeComp;
 
+    double start;
     // Encoders
     Encoder leadScrewsEncoder;
     RelativeEncoder frontLeftClimbEncoder;
@@ -132,42 +133,44 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         //leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
-        frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
-        frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
-        backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
-        backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
+        //frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
+        //frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
+        //backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
+        //backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
     }
 
-    public double resetEncoderValue(RelativeEncoder encoder) {
+   /* public double resetEncoderValue(RelativeEncoder encoder) {
         double value = encoder.getPosition();
         encoder.setPosition(0);
         return value;
     }
-
+*/
     @Override
     public void autonomousInit() {
-       // start = System.currentTimeMillis();
+       //start = System.currentTimeMillis();
     }
 
     @Override
     public void autonomousPeriodic() {
-        
+        System.out.print("here");
+        System.out.print("autonstart");
     }
 
-    public void doIntakeTransfer() {
+    /*public void doIntakeTransfer() {
         transferToOuttake.set(transferToOuttakePower);
     }
+    */
 
     @Override
     public void teleopInit() {
-        //start = System.currentTimeMillis();
+        start = System.currentTimeMillis();
         boolean commenceHang;
         int hangStep;
 
         
     }
 
-   public double calcDriveCurve(double power) {
+ /*  public double calcDriveCurve(double power) {
         double harshness = 8.0;
 
         if (power >= 1.0) {
@@ -188,13 +191,19 @@ public class Robot extends TimedRobot {
         return 0.0;
     }
     
-
+*/
     @Override
     public void teleopPeriodic() {
-
-        if (joystick.getRawButtonPressed(1)) {
-            doIntakeTransfer();
+/*
+        if (joystick.getRawButtonPressed(5)) {
+            //doIntakeTransfer();
+            leadScrews.set(0.5);
+        } else if (joystick.getRawButtonPressed(6)) {
+            leadScrews.set(-0.5);
+        } else if (!joystick.getRawButton(5) && !joystick.getRawButton(6)) {
+            leadScrews.set(0);
         }
+    */
 
         //Toggle seeking red or blue balls
        /* if (m_stick.getRawButtonPressed(8)) {
@@ -209,8 +218,6 @@ public class Robot extends TimedRobot {
         */
         //Update_Limelight_Tracking();
         //boolean auto = joystick.getRawButton(1);
-        //leftBank.setVoltage(12);
-        //rightBank.setVoltage(12);
         //long now = System.currentTimeMillis();
         // Turning speed limit
         double limitTurnSpeed = 0.5; // EDITABLE VALUE
@@ -265,8 +272,42 @@ public class Robot extends TimedRobot {
 
         // Actual Drive code
         
-        myDrive.tankDrive(joystickLValue, -joystickRValue);
-
+        //myDrive.tankDrive(joystickLValue, -joystickRValue);
+        /*if (joystick.getRawButton(9) && backRightClimbEncoder.getPosition() > 0 && backLeftClimbEncoder.getPosition() > 0){
+            backRightClimb.set(-1);
+            backLeftClimb.set(-1);
+            System.out.print("downright " + backRightClimbEncoder.getPosition());
+            System.out.print("downleft " + backLeftClimbEncoder.getPosition());
+        }
+        else if (joystick.getRawButton(7) && backLeftClimbEncoder.getPosition() < 444 && backRightClimbEncoder.getPosition() < 444){
+            backLeftClimb.set(1);
+            backRightClimb.set(1);
+            System.out.print("upright " + backRightClimbEncoder.getPosition());
+            System.out.print("upleft " + backLeftClimbEncoder.getPosition());
+        }
+        else{
+            backLeftClimb.set(0);
+            backRightClimb.set(0);
+        }
+        if (joystick.getRawButtonPressed(8)){
+            backLeftClimbEncoder.setPosition(0);
+            backRightClimbEncoder.setPosition(0);
+        }
+        */
+        if (joystick.getRawButton(9)){
+            leadScrews.set(-0.3);
+            System.out.print("leadback " + leadScrewsEncoder.getDistance());
+        }
+        else if (joystick.getRawButton(7)){
+            leadScrews.set(0.3);
+            System.out.print("leadforward " + leadScrewsEncoder.getDistance());
+        }
+        else{
+            leadScrews.set(0);
+        }
+        if (joystick.getRawButtonPressed(8)){
+            leadScrewsEncoder.reset();
+        }
         //Hang Code
         
         if (joystick.getRawButtonPressed(3)) {
@@ -274,8 +315,8 @@ public class Robot extends TimedRobot {
             backLeftClimbEncoder.setPosition(0);
             backLeftClimbEncoder.setPosition(0);
             if (backLeftClimbEncoder.getPosition() < 500 && backRightClimbEncoder.getPosition() < 500){
-                backLeftClimb.set(0.8);
-                backRightClimb.set(0.8);
+                backLeftClimb.set(0.3);
+                backRightClimb.set(0.3);
             }
         }
 
@@ -387,6 +428,7 @@ public class Robot extends TimedRobot {
                 hangStep++;
             }
         }
+        
         
 
     }
