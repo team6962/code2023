@@ -51,11 +51,11 @@ public class Robot extends TimedRobot {
     private int platformDrivePractice = 2;
 
     // current platform for build
-    private int platformCurrent = platformDrivePractice;
+    private int platformCurrent = platformMain;
 
     // driving systems
     private boolean enableDrive = true;
-    private boolean enableLimelightDriving = true;
+    private boolean enableLimelightDriving = false;
 
     // shooting systems
     private boolean enableIntake = false;
@@ -89,7 +89,7 @@ public class Robot extends TimedRobot {
     private int joystickButtonDrivingSeekRed = 9;
 
     // Drive speed limits
-    double limitTurnSpeed = 0.85; // 75% wasn't enough, 85% seems to be about right for turning
+    double limitTurnSpeed = 0.50; // 75% wasn't enough, 85% seems to be about right for turning
     double limitDriveSpeed = 0.75;
 
     // Hang
@@ -292,13 +292,13 @@ public class Robot extends TimedRobot {
      * Handles teleoperated driving mode.
      */
     private void teleopDriver() {
-        double turnValue = joystick.getRawAxis(2) * limitTurnSpeed;
-        if (Math.abs(turnValue) < 0.1) {
+        double turnValue = joystick.getRawAxis(1) * limitTurnSpeed;
+        if (Math.abs(turnValue) < 0.2) {
             turnValue = 0.0;
         }
 
-        double joystickLValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(1) + (turnValue))));
-        double joystickRValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(1) - (turnValue))));
+        double joystickLValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(2) + (turnValue))));
+        double joystickRValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(2) - (turnValue))));
 
         double leftSpeed = calcDriveCurve(joystickLValue) * limitDriveSpeed;
         double rightSpeed = calcDriveCurve(joystickRValue) * limitDriveSpeed;
@@ -667,7 +667,7 @@ public class Robot extends TimedRobot {
         intakeBrush = new Spark(5);
         intakeComp = new Spark(6);
 
-        // myDrive = new DifferentialDrive(leftBank, rightBank);
+        myDrive = new DifferentialDrive(leftBank, rightBank);
 
         leadScrewsEncoder = new Encoder(0, 1);
         frontLeftClimbEncoder = frontLeftClimb.getEncoder();
