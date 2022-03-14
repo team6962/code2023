@@ -92,8 +92,8 @@ public class Robot extends TimedRobot {
     private int joystickButtonDrivingSeekRed = 9;
 
     // Drive speed limits
-    double limitTurnSpeed = 0.50; // 75% wasn't enough, 85% seems to be about right for turning
-    double limitDriveSpeed = 0.75;
+    double limitForwardBackSpeed = 0.90; 
+    double limitTwistSpeed = 0.50;
 
     // Hang
     boolean commenceHang;
@@ -154,10 +154,15 @@ public class Robot extends TimedRobot {
     Spark lowOuttake;
     Spark transferToOuttake;
     Spark outtakeRotator;
+    private double highOuttakePower = 0.50;
+    private double lowOuttakePower = 0.75;
+    private double transferToOuttakePower = 0.8;
 
     // Intake Motor Controllers
     Spark intakeBrush;
     Spark intakeComp;
+    private double intakeBrushPower = 1.0;
+    private double intakeCompPower = 1.0;
 
     double start;
     boolean stopzero;
@@ -173,7 +178,6 @@ public class Robot extends TimedRobot {
     double frontBarRPos;
     double backBarLPos;
     double backBarRPos;
-    double transferToOuttakePower = -0.6;
 
     final int WIDTH = 640;
 
@@ -292,22 +296,32 @@ public class Robot extends TimedRobot {
 
     /**
      * Handles teleoperated driving mode.
+     * 
+     * @todo Currently janky, needs testing and fine-tuning.
      */
     private void teleopDriver() {
-        double turnValue = joystick.getRawAxis(1) * limitTurnSpeed;
-        if (Math.abs(turnValue) < 0.2) {
-            turnValue = 0.0;
+        double rawAxisTwist = joystick.getRawAxis(2);
+        double rawAxisForwardBack = -joystick.getRawAxis(1);
+        double fowardBackValue = rawAxisForwardBack * limitForwardBackSpeed;
+
+        if (Math.abs(fowardBackValue) < 0.1) {
+            fowardBackValue = 0.0;
         }
 
-        double joystickLValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(2) + (turnValue))));
-        double joystickRValue = Math.min(1.0, Math.max(-1.0, (-joystick.getRawAxis(2) - (turnValue))));
+        if (fowardBackValue > 0.1) {
+            System.out.println("Turn Raw=" + rawAxisForwardBack + " Value=" + fowardBackValue);
+        }
 
-        double leftSpeed = calcDriveCurve(joystickLValue) * limitDriveSpeed;
-        double rightSpeed = calcDriveCurve(joystickRValue) * limitDriveSpeed;
+        double joystickLValue = rawAxisTwist + fowardBackValue;
+        double joystickRValue = rawAxisTwist - fowardBackValue;
+
+        // TODO: Apply curves?
+        double leftSpeed = joystickLValue * limitTwistSpeed;
+        double rightSpeed = joystickRValue * limitTwistSpeed;
 
         // don't log very low values, just when the joystick is actually driving
         if (leftSpeed > 0.1 || leftSpeed < -0.1 || rightSpeed > 0.1 || rightSpeed < -0.1) {
-            System.out.println("leftSpeed=" + leftSpeed + " rightSpeed=" + rightSpeed);
+            System.out.println("rawAxisDrive=" + rawAxisTwist + " joystickLValue=" + joystickLValue + " leftSpeed=" + leftSpeed + " joystickRValue=" + joystickRValue + " rightSpeed=" + rightSpeed);
         }
 
         myDrive.tankDrive(leftSpeed, rightSpeed);
@@ -360,13 +374,16 @@ public class Robot extends TimedRobot {
             return;
         }
 
+        // toggle on/off based on holding output button
         if (joystick.getRawButton(joystickButtonOutput)) {
-            highOuttake.set(0.65);
-            lowOuttake.set(0.60);
-        } else {
-            highOuttake.set(0.0);
-            lowOuttake.set(0.0);
-        }
+            highOuttake.set(highOuttakePower);
+            lowOuttake.set(lowOuttakePower);
+
+            return;
+        } 
+
+        highOuttake.set(0.0);
+        lowOuttake.set(0.0);
     }
 
     /**
@@ -377,10 +394,44 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        if (joystick.getRawButtonPressed(joystickButtonIntake)) {
-            intakeBrush.set(1.0);
-            intakeComp.set(1.0);
+        runIntakeCompression();
+        runIntakeBrush();
+    }
+
+    private void runIntakeCompression() {
+        if (!enableIntake) {
+            return;
         }
+
+        boolean running = false;
+
+        // toggle on/of based on button press
+        if (joystick.getRawButtonPressed(joystickButtonIntake)) {
+            if (!running) {
+                intakeComp.set(intakeCompPower);
+                running = true;
+
+                return;
+            }
+
+            intakeComp.set(0.0);
+            running = false;
+        }
+    }
+
+    private void runIntakeBrush() {
+        if (!enableOutput) {
+            return;
+        }
+
+        // toggle on/off based on holding output button
+        if (joystick.getRawButton(joystickButtonOutput)) {
+            intakeBrush.set(intakeBrushPower);
+         
+            return;
+        }
+
+        intakeBrush.set(0.0);
     }
 
     /**
@@ -392,9 +443,14 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        if (joystick.getRawButton(joystickButtonTransfer)) {
-            transferToOuttake.set(-0.8);
+        // toggle on/off based on holding output button
+        if (joystick.getRawButton(joystickButtonOutput)) {
+            transferToOuttake.set(transferToOuttakePower);
+
+            return;
         }
+
+        transferToOuttake.set(0.0);
     }
 
     /**
