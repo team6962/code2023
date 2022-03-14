@@ -79,7 +79,8 @@ public class Robot extends TimedRobot {
     private String limelightShootingId = "limelight2";
 
     // Joystick
-    // TODO: Currently, for debugging, Hang uses all of its own buttons and overrides these
+    // TODO: Currently, for debugging, Hang uses all of its own buttons and
+    // overrides these
     Joystick joystick;
     private int joystickButtonOutput = 1;
     private int joystickButtonIntake = 2;
@@ -360,7 +361,6 @@ public class Robot extends TimedRobot {
         }
 
         if (joystick.getRawButton(joystickButtonOutput)) {
-            //myDrive.tankDrive(0, 0);
             highOuttake.set(0.65);
             lowOuttake.set(0.60);
         } else {
@@ -684,7 +684,8 @@ public class Robot extends TimedRobot {
 
         stopzero = true;
 
-        // TODO: Currently Hang overloads all the joystick buttons for debugging, disable all other systems to prevent accidents
+        // TODO: Currently Hang overloads all the joystick buttons for debugging,
+        // disable all other systems to prevent accidents
         if (enableHang) {
             enableDrive = false;
             enableIntake = false;
