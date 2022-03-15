@@ -67,7 +67,7 @@ public class Robot extends TimedRobot {
     private boolean enableHang = false;
 
     // Limelight driving
-    private String limelightDrivingId = "limelight";
+    private String limelightDrivingId = "limelight-drive";
     private boolean m_LimelightHasValidTarget = false;
     private double m_LimelightDriveCommand = 0.0;
     private double m_LimelightSteerCommand = 0.0;
@@ -76,7 +76,7 @@ public class Robot extends TimedRobot {
 
     // Limelight shooting
     private boolean useShootingLimelight = false;
-    private String limelightShootingId = "limelight2";
+    private String limelightShootingId = "limelight-shoot";
 
     // Joystick
     // TODO: Currently, for debugging, Hang uses all of its own buttons and
