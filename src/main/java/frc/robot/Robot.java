@@ -86,35 +86,37 @@ public class Robot extends TimedRobot {
 	boolean hangStepDone = true;
     HangStep[] hangSteps = {
         /* initial arm raise, set back bar to height of 350 */
-        new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
+        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
         /* first lift, list back bar to height of 20*/
-        new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 140, true),
+        new HangStep(HM.DOWN, -6, HM.NONE, 0, HM.NONE, 0, true),
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
-        new HangStep(HM.UP, 370, HM.NONE, 0, HM.DOWN, -70, true),
+        
+        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, true),
         //Rotate a little more (10 ticks)
         //Change 120
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -110, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, true),
         //Retract front bar (50 ticks)
         //Change 350
-        new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
+        new HangStep(HM.NONE, 0, HM.DOWN, 410, HM.NONE, 0, true),
         //Go to zero
         //Extend Back
-        new HangStep(HM.NONE, 0, HM.UP, 300, HM.NONE, 0, true),
+        new HangStep(HM.UP, 260, HM.NONE, 0, HM.UP, 211, true),
         //Retract Back to 50
-        new HangStep(HM.DOWN, 100, HM.DOWN, 50, HM.NONE, 0, true),
+        new HangStep(HM.DOWN, 185, HM.DOWN, 50, HM.DOWN, -28, true),
         //Lead Screw goes to maxium
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
+        new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.NONE, 0, true),
         //rear to 380
-        new HangStep(HM.NONE, 0, HM.UP, 440, HM.NONE, 0, true),
+        new HangStep(HM.UP, 440, HM.NONE, 0, HM.NONE, 0, true),
         //Lead screw to 170
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
         //
-        new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
+        new HangStep(HM.DOWN, 400, HM.NONE, 0, HM.UP, 0, true),
 
-        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
-        new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
+        new HangStep(HM.NONE, 0, HM.UP, 150, HM.DOWN, -133, true),
+        //new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
+        //new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
 
 
 };
@@ -149,6 +151,7 @@ public class Robot extends TimedRobot {
     RelativeEncoder frontRightClimbEncoder;
     RelativeEncoder backLeftClimbEncoder;
     RelativeEncoder backRightClimbEncoder;
+    Encoder outtakeRotatorEncoder;
 
     double leadScrewPos;
     double frontBarLPos;
@@ -196,39 +199,42 @@ public class Robot extends TimedRobot {
         frontRightClimbEncoder = frontRightClimb.getEncoder();
         backLeftClimbEncoder = backLeftClimb.getEncoder();
         backRightClimbEncoder = backRightClimb.getEncoder();
+        outtakeRotatorEncoder = new Encoder(2,3);
        // NetworkTableInstance.getDefault().getTable("limelight").getEntry("pipeline").setNumber(limelight_pipeline_blue);
        stopzero = true;
     }
 
     @Override
     public void robotPeriodic() {
-        //leadScrewsEncoderValue += resetEncoderValue(leadScrewsEncoder);
-        //frontLeftClimbEncoderValue += resetEncoderValue(frontLeftClimbEncoder);
-        //frontRightClimbEncoderValue += resetEncoderValue(frontRightClimbEncoder);
-        //backLeftClimbEncoderValue += resetEncoderValue(backLeftClimbEncoder);
-        //backRightClimbEncoderValue += resetEncoderValue(backRightClimbEncoder);
+        
     }
 
-   /* public double resetEncoderValue(RelativeEncoder encoder) {
+    public double resetEncoderValue(RelativeEncoder encoder) {
         double value = encoder.getPosition();
         encoder.setPosition(0);
         return value;
     }
-*/
+
     @Override
     public void autonomousInit() {
        //start = System.currentTimeMillis();
+       System.out.print("amganer");
     }
 
     @Override
     public void autonomousPeriodic() {
-        //System.out.print("here");
+        System.out.print("here");
         //System.out.print("autonstart");
         //backRightClimb.set(-0.4);
         //backLeftClimb.set(-0.4);
-        intakeComp.set(-1);
-        intakeBrush.set(1);
-        transferToOuttake.set(-0.8);
+        // step 7:
+        intakeBrush.set(0.4);
+        intakeComp.set(0.4);
+        lowOuttake.set(0.4);
+        highOuttake.set(0.4);
+        transferToOuttake.set(0.4);
+        //outtakeRotator.set(0.2);
+        //System.out.println(outtakeRotatorEncoder.getDistance());
     }
 
     /*public void doIntakeTransfer() {
@@ -240,7 +246,14 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         start = System.currentTimeMillis();
         boolean commenceHang;
-        
+        intakeBrush.set(0);
+        intakeComp.set(0);
+        lowOuttake.set(0);
+        highOuttake.set(0);
+        transferToOuttake.set(0);
+        leftBank.set(0);
+        rightBank.set(0);
+        System.out.print("TeleopInit");
 
         
     }
@@ -281,7 +294,6 @@ public class Robot extends TimedRobot {
 		double backBarLSpeed = 0;
 		double backBarRSpeed = 0;
 		double leadScrewSpeed = 0;
-
         // disable driving, but keep updating myDrive to squelch WPI errors in the console
         //myDrive.tankDrive(0.0, 0.0);
 
@@ -342,6 +354,8 @@ public class Robot extends TimedRobot {
             leadScrewSpeed = -0.4;
             System.out.print(leadScrewPos);
         }
+
+       
         
 
         
@@ -486,7 +500,7 @@ public class Robot extends TimedRobot {
  
 		if(!hangStepDone && hangStep < hangSteps.length) {
 			boolean stepDone = true;
- 
+        
 			
 			/* front bar left*/
 			if(hangSteps[hangStep].frontBar == HM.UP && frontBarLPos < hangSteps[hangStep].frontBarPos) {
@@ -555,11 +569,13 @@ public class Robot extends TimedRobot {
         if (backBarRPos > 455 || backBarRPos < 0) {
             backBarRSpeed = 0;
         }
-        if (leadScrewPos > 170 || backBarRPos < -115) {
+        if (leadScrewPos > 200 || backBarRPos < -135) {
             leadScrewSpeed = 0;
-        }*/
+        }
+        */
+        //New valus are 200 and -135
  
-		
+    
 		frontLeftClimb.set(frontBarLSpeed);
 		frontRightClimb.set(frontBarRSpeed);
 		backLeftClimb.set(backBarLSpeed);
