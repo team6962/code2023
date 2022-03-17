@@ -100,53 +100,61 @@ public class Robot extends TimedRobot {
     int hangStep = 0;
     boolean hangStepDone = true;
     HangStep[] hangSteps = {
-        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
+        /* initial arm raise, set back bar to height of 350 */
+        //0
+        new HangStep(HM.UP, 380, HM.NONE, 0, HM.UP, 140, true),
         /* first lift, list back bar to height of 20*/
         //1
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 140, true),
-        //2
-        new HangStep(HM.DOWN, -6, HM.NONE, 0, HM.NONE, 0, true),
+        new HangStep(HM.DOWN, -6, HM.NONE, 0, HM.NONE, 0, false),
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
-        //3
-        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, true),
+        //2
+        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, false),
         //Rotate a little more (10 ticks)
         //Change 120
-        //4
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, true),
+        //3
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, false),
         //Retract front bar (50 ticks)
         //Change 350
-        //5
+        //4
         new HangStep(HM.NONE, 0, HM.DOWN, 410, HM.NONE, 0, true),
         //Go to zero
         //Extend Back
-        //6
+        //5
         new HangStep(HM.UP, 260, HM.NONE, 0, HM.UP, 211, true),
         //Retract Back to 50
+        //6
+        new HangStep(HM.DOWN, 120, HM.NONE, 0, HM.NONE, 0, false),
         //7
-        new HangStep(HM.DOWN, 120, HM.NONE, 0, HM.NONE, 0, true),
-        //8
-        new HangStep(HM.NONE, 0, HM.DOWN, -4, HM.DOWN, -28, true),
+        new HangStep(HM.NONE, 0, HM.DOWN, -4, HM.DOWN, -28, false),
         //Lead Screw goes to maxium
         //rear to 380
-        //9
-        new HangStep(HM.UP, 440, HM.NONE, 0, HM.NONE, 0, true),
+        //8
+        new HangStep(HM.UP, 440, HM.NONE, 0, HM.NONE, 0, false),
         //Lead screw to 170
+        //9
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, false),
         //10
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
-        //11
         new HangStep(HM.DOWN, 400, HM.NONE, 0, HM.NONE, 0, true),
-        //12
+        //11
         new HangStep(HM.NONE, 0, HM.UP, 320, HM.DOWN, -133, true),
         //new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
         //new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
-
     };
 
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
     DifferentialDrive myDrive;
+
+    
+    //STRICTLY FOR ENCODERS
+    CANSparkMax rightBankEncoderHold;
+    CANSparkMax leftBankEncoderHold;
+
+    //Drive Motor Encoders
+    RelativeEncoder rightBankEncoder;
+    RelativeEncoder leftBankEncoder;
 
     // Drive Practice Controllers
     private PWMSparkMax drivePracticeLeftController;
@@ -227,6 +235,16 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousPeriodic() {
+        //EDIT THE QUESTION MARK
+        if (leftBankEncoder.getPosition() > ?){
+            myDrive.tankDrive(-0.7, -0.7);
+        }
+        else {
+            runIntake();
+            runTransfer();
+            runOutput();
+        }
+        
 
     }
 
@@ -490,11 +508,7 @@ public class Robot extends TimedRobot {
         // myDrive.tankDrive(0.0, 0.0);
 
         
-        double frontRightEncoderValue = frontBarL.getPosition();
-        double frontBarRPos = frontBarR.getPosition();
-        double backBarLPos = backBarL.getPosition();
-        double backBarRPos = backBarR.getPosition();
-        double leadScrewPos = leadScrew.getPosition();
+        
          
         
         // Next Step
@@ -509,7 +523,7 @@ public class Robot extends TimedRobot {
             System.out.print("Front Left: \n" + frontBarLPos + "\n");
             System.out.print("Front Right: \n" + frontBarRPos + "\n");
             System.out.print("Lead Screw: \n" + leadScrewPos + "\n");
-            System.out.print("Hangstep: " + Hangstep + "\n");
+            System.out.print("Hangstep: " + hangStep + "\n");
             hangStepDone = true;
         }
 
@@ -659,14 +673,20 @@ public class Robot extends TimedRobot {
      * 
      */
     private void initMainRobot() {
+        //Encoder holds
+        rightBankEncoderHold = new CANSparkMax(2, MotorType.kBrushless);
+        leftBankEncoderHold = new CANSparkMax(1, MotorType.kBrushless);
         // drive motors
         rightBank = new MotorControllerGroup(
-                new CANSparkMax(2, MotorType.kBrushless),
+                rightBankEncoderHold,
                 new CANSparkMax(9, MotorType.kBrushless));
+        rightBankEncoder = rightBankEncoderHold.getEncoder();
 
         leftBank = new MotorControllerGroup(
-                new CANSparkMax(1, MotorType.kBrushless),
+                leftBankEncoderHold,
                 new CANSparkMax(4, MotorType.kBrushless));
+        leftBankEncoder = leftBankEncoderHold.getEncoder();
+
 
         myDrive = new DifferentialDrive(leftBank, rightBank);
 
