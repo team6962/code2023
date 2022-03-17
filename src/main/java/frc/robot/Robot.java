@@ -92,7 +92,7 @@ public class Robot extends TimedRobot {
     private int joystickButtonDrivingSeekRed = 9;
 
     // Drive speed limits
-    double limitForwardBackSpeed = 0.90; 
+    double limitForwardBackSpeed = 0.80; 
     double limitTwistSpeed = 0.50;
 
     // Hang
@@ -135,7 +135,7 @@ public class Robot extends TimedRobot {
         //9
         new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, false),
         //10
-        new HangStep(HM.DOWN, 400, HM.NONE, 0, HM.NONE, 0, true),
+        new HangStep(HM.DOWN, 420, HM.NONE, 0, HM.NONE, 0, true),
         //11
         new HangStep(HM.NONE, 0, HM.UP, 320, HM.DOWN, -133, true),
         //new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
