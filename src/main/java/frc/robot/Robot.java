@@ -64,7 +64,7 @@ public class Robot extends TimedRobot {
     private boolean enableLimelightShooting = false;
 
     // hang systems
-    private boolean enableHang = false;
+    private boolean enableHang = true;
 
     // Limelight driving
     private String limelightDrivingId = "limelight-drive";
@@ -84,7 +84,7 @@ public class Robot extends TimedRobot {
     Joystick joystick;
     private int joystickButtonOutput = 1;
     private int joystickButtonIntake = 2;
-    private int joystickButtonExtendArms = 3;
+    private int joystickButtonKillHang = 3;
     private int joystickButtonCommenceHang = 4;
     private int joystickButtonTransfer = 5;
     private int joystickButtonDrivingAuto = 7;
@@ -100,36 +100,46 @@ public class Robot extends TimedRobot {
     int hangStep = 0;
     boolean hangStepDone = true;
     HangStep[] hangSteps = {
-            /* initial arm raise, set back bar to height of 350 */
-            new HangStep(HM.NONE, 0, HM.UP, 380, HM.NONE, 0, true),
-            /* first lift, list back bar to height of 20 */
-            new HangStep(HM.NONE, 0, HM.DOWN, 5, HM.NONE, 0, true),
-            /* rotate to allow high hang grab, rotate using lead screw */
-            // Change 400
-            new HangStep(HM.UP, 370, HM.NONE, 0, HM.DOWN, -70, true),
-            // Rotate a little more (10 ticks)
-            // Change 120
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -110, true),
-            // Retract front bar (50 ticks)
-            // Change 350
-            new HangStep(HM.DOWN, 350, HM.NONE, 0, HM.NONE, 0, true),
-            // Go to zero
-            // Extend Back
-            new HangStep(HM.NONE, 0, HM.UP, 300, HM.NONE, 0, true),
-            // Retract Back to 50
-            new HangStep(HM.DOWN, 100, HM.DOWN, 50, HM.NONE, 0, true),
-            // Lead Screw goes to maxium
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 100, true),
-            // rear to 380
-            new HangStep(HM.NONE, 0, HM.UP, 440, HM.NONE, 0, true),
-            // Lead screw to 170
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 170, true),
-            //
-            new HangStep(HM.NONE, 0, HM.DOWN, 320, HM.UP, 0, true),
-
-            new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
-            new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
-            new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
+        new HangStep(HM.UP, 380, HM.NONE, 0, HM.NONE, 0, true),
+        /* first lift, list back bar to height of 20*/
+        //1
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 140, true),
+        //2
+        new HangStep(HM.DOWN, -6, HM.NONE, 0, HM.NONE, 0, true),
+        /* rotate to allow high hang grab, rotate using lead screw */
+        // Change 400
+        //3
+        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, true),
+        //Rotate a little more (10 ticks)
+        //Change 120
+        //4
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, true),
+        //Retract front bar (50 ticks)
+        //Change 350
+        //5
+        new HangStep(HM.NONE, 0, HM.DOWN, 410, HM.NONE, 0, true),
+        //Go to zero
+        //Extend Back
+        //6
+        new HangStep(HM.UP, 260, HM.NONE, 0, HM.UP, 211, true),
+        //Retract Back to 50
+        //7
+        new HangStep(HM.DOWN, 120, HM.NONE, 0, HM.NONE, 0, true),
+        //8
+        new HangStep(HM.NONE, 0, HM.DOWN, -4, HM.DOWN, -28, true),
+        //Lead Screw goes to maxium
+        //rear to 380
+        //9
+        new HangStep(HM.UP, 440, HM.NONE, 0, HM.NONE, 0, true),
+        //Lead screw to 170
+        //10
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, true),
+        //11
+        new HangStep(HM.DOWN, 400, HM.NONE, 0, HM.NONE, 0, true),
+        //12
+        new HangStep(HM.NONE, 0, HM.UP, 320, HM.DOWN, -133, true),
+        //new HangStep(HM.DOWN, 0, HM.DOWN, 0, HM.DOWN, 0, true),
+        //new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 0, true),
 
     };
 
@@ -479,76 +489,27 @@ public class Robot extends TimedRobot {
         // console
         // myDrive.tankDrive(0.0, 0.0);
 
-        /*
-         * double frontRightEncoderValue = frontBarL.getPosition();
-         * double frontBarRPos = frontBarR.getPosition();
-         * double backBarLPos = backBarL.getPosition();
-         * double backBarRPos = backBarR.getPosition();
-         * double leadScrewPos = leadScrew.getPosition();
-         */
-        // Front left forward
-        if (joystick.getRawButton(3)) {
-            frontBarLSpeed = 0.4;
-            System.out.print(frontBarLPos);
-        }
-        // Front left backward
-        if (joystick.getRawButton(4)) {
-            frontBarLSpeed = -0.4;
-            System.out.print(frontBarLPos);
-        }
-        // Front Right Forward
-        if (joystick.getRawButton(5)) {
-            frontBarRSpeed = 0.4;
-            System.out.print(frontBarRPos);
-        }
-        // Front Right Back
-        if (joystick.getRawButton(6)) {
-            frontBarRSpeed = -0.4;
-            System.out.print(frontBarRSpeed);
-        }
-        // Back Left Forward
-        if (joystick.getRawButton(7)) {
-            backBarLSpeed = 0.4;
-            System.out.print(backBarLPos);
-        }
-        // Back Left Back
-        if (joystick.getRawButton(8)) {
-            backBarLSpeed = -0.4;
-            System.out.print(backBarLPos);
-        }
-        // Back Right Forward
-        if (joystick.getRawButton(9)) {
-            backBarRSpeed = 0.4;
-            System.out.print(backBarRPos);
-        }
-        // Back Right Back
-        if (joystick.getRawButton(10)) {
-            backBarRSpeed = -0.4;
-            System.out.print(backBarRPos);
-        }
-        // Lead Screw Forward
-        if (joystick.getRawButton(1)) {
-            leadScrewSpeed = 0.4;
-            System.out.print(leadScrewPos);
-        }
-        // Lead Screw Backwards
-        if (joystick.getRawButton(2)) {
-            leadScrewSpeed = -0.4;
-            System.out.print(leadScrewPos);
-        }
-
+        
+        double frontRightEncoderValue = frontBarL.getPosition();
+        double frontBarRPos = frontBarR.getPosition();
+        double backBarLPos = backBarL.getPosition();
+        double backBarRPos = backBarR.getPosition();
+        double leadScrewPos = leadScrew.getPosition();
+         
+        
         // Next Step
-        if (hangStepDone && joystick.getRawButtonPressed(11)) {
+        if (hangStepDone && joystick.getRawButtonPressed(joystickButtonCommenceHang)) {
             hangStepDone = false;
             System.out.print("Button 11, hangstepdone: " + hangStepDone + " Hangstep: " + hangStep);
         }
         // Kill Switch
-        if (joystick.getRawButtonPressed(12)) {
+        if (joystick.getRawButtonPressed(joystickButtonKillHang)) {
             System.out.print("Backleft: " + backBarLPos + "\n");
             System.out.print("Back Right: \n" + backBarRPos + "\n");
             System.out.print("Front Left: \n" + frontBarLPos + "\n");
             System.out.print("Front Right: \n" + frontBarRPos + "\n");
             System.out.print("Lead Screw: \n" + leadScrewPos + "\n");
+            System.out.print("Hangstep: " + Hangstep + "\n");
             hangStepDone = true;
         }
 
@@ -742,17 +703,6 @@ public class Robot extends TimedRobot {
 
         // TODO: Currently Hang overloads all the joystick buttons for debugging,
         // disable all other systems to prevent accidents
-        if (enableHang) {
-            enableDrive = false;
-            enableIntake = false;
-            enableTransfer = false;
-            enableOutput = false;
-            enableLimelightDriving = false;
-            enableLimelightShooting = false;
-
-            System.out.println("Hang ENABLED, disabling ALL other systems");
-            logDisabledSystems();
-        }
     }
 
     /**
