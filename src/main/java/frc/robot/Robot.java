@@ -86,12 +86,13 @@ public class Robot extends TimedRobot {
     private int joystickButtonIntake = 2;
     private int joystickButtonOuttakeRotatorNeg = 3;
     private int joystickButtonOuttakeRotatorPos = 5;
-    private int joystickButtonReverseBrush = 6;
     private int joystickButtonDrivingAuto = 7;
     private int joystickButtonDrivingSeekBlue = 8;
     private int joystickButtonDrivingSeekRed = 9;
-    private int joystickButtonKillHang = 12;
+    private int joystickButtonReverseBrush = 10;
     private int joystickButtonCommenceHang = 11;
+    private int joystickButtonKillHang = 12;
+    
     
 
     // Drive speed limits
@@ -177,6 +178,11 @@ public class Robot extends TimedRobot {
     Spark outtakeRotator;
     private double highOuttakePower = 0.50;
     private double lowOuttakePower = 0.75;
+
+
+
+
+
     private double transferToOuttakePower = 0.8;
 
     // Intake Motor Controllers
@@ -242,7 +248,7 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
         //EDIT THE QUESTION MARK
         //if (leftBankEncoder.getPosition() > ?){
-        myDrive.tankDrive(-0.2, -0.2);
+        myDrive.tankDrive(-0.2, 0.2);
         //}
         //else {
           //  runIntake();
@@ -366,43 +372,24 @@ public class Robot extends TimedRobot {
             //System.out.println("Turn Raw=" + rawAxisForwardBack + " Value=" + fowardBackValue);
         }
         */
-        double joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*limitTwistSpeed));
-        double joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*limitTwistSpeed));
-        /*
-        if (joystick.getRawAxis(1) > 0){
-            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
-            joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
+        double axis2 = joystick.getRawAxis(2)*0.8;
+        double axis1 = joystick.getRawAxis(1);
+        if (axis2 < 0){
+            axis2 += Math.min(0.14, -axis2);
         }
-        else if(joystick.getRawAxis(1) < 0 && joystick.getRawAxis(2) < 0.11 && joystick.getRawAxis(2) > -0.11){
-            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
-            joystickRValue = joystickLValue;  
-            System.out.print("here");
-        }
-        else{
-            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
-            joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
-        }
-        */
+        double joystickLValue = (-axis1+axis2);
+        double joystickRValue = (-axis1-axis2);
         
-        //double joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
-        //double joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
-
-        // TODO: Apply curves?
-        //double leftSpeed = joystickLValue * limitTwistSpeed;
-        //double rightSpeed = joystickRValue * limitTwistSpeed;
-
-        // don't log very low values, just when the joystick is actually driving
-        /*if (leftSpeed > 0.1 || leftSpeed < -0.1 || rightSpeed > 0.1 || rightSpeed < -0.1) {
-            //System.out.println("rawAxisDrive=" + rawAxisTwist + " joystickLValue=" + joystickLValue + " leftSpeed=" + leftSpeed + " joystickRValue=" + joystickRValue + " rightSpeed=" + rightSpeed);
-        }
-        */
-        if(joystick.getRawButton(11)){
-            System.out.print("joystickLValue: "+joystickLValue+"\n");
-            System.out.print("joystickRValue: "+joystickRValue+"\n");
-            System.out.print("axis1: "+joystick.getRawAxis(1) +"\n");
-            System.out.print("axis2 : "+joystick.getRawAxis(2)+"\n");
-        }
+        
+        System.out.print("joystickLValue: "+joystickLValue+"\n");
+        System.out.print("joystickRValue: "+joystickRValue+"\n");
+        System.out.print("axis1: "+axis1 +"\n");
+        System.out.print("axis2 : "+axis2+"\n");
+        
+        
         myDrive.tankDrive(joystickLValue, -joystickRValue);
+        System.out.println("leftencoder: " + leftBankEncoder.getPosition());
+        System.out.println("rightencoder: " + rightBankEncoder.getPosition());
     }
 
     /**
@@ -730,13 +717,12 @@ public class Robot extends TimedRobot {
         rightBank = new MotorControllerGroup(
                 rightBankEncoderHold,
                 new CANSparkMax(9, MotorType.kBrushless));
-        rightBankEncoder = rightBankEncoderHold.getEncoder();
 
         leftBank = new MotorControllerGroup(
                 leftBankEncoderHold,
                 new CANSparkMax(4, MotorType.kBrushless));
         leftBankEncoder = leftBankEncoderHold.getEncoder();
-
+        rightBankEncoder = rightBankEncoderHold.getEncoder();
 
         myDrive = new DifferentialDrive(leftBank, rightBank);
 
