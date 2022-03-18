@@ -82,14 +82,15 @@ public class Robot extends TimedRobot {
     // TODO: Currently, for debugging, Hang uses all of its own buttons and
     // overrides these
     Joystick joystick;
+    Joystick joystick2;
     private int joystickButtonOutput = 1;
     private int joystickButtonIntake = 2;
     private int joystickButtonOuttakeRotatorNeg = 3;
     private int joystickButtonOuttakeRotatorPos = 5;
-    private int joystickButtonDrivingAuto = 7;
-    private int joystickButtonDrivingSeekBlue = 8;
-    private int joystickButtonDrivingSeekRed = 9;
-    private int joystickButtonReverseBrush = 10;
+    private int joystickButtonDrivingAuto = 4;
+    private int joystickButtonDrivingSeekBlue = 7;
+    private int joystickButtonDrivingSeekRed = 8;
+    private int joystickButtonReverseBrush = 6;
     private int joystickButtonCommenceHang = 11;
     private int joystickButtonKillHang = 12;
     
@@ -223,6 +224,7 @@ public class Robot extends TimedRobot {
 
         // Joystick
         joystick = new Joystick(0);
+        joystick2 = new Joystick(1);
 
         logDisabledSystems();
 
@@ -242,19 +244,35 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         // start = System.currentTimeMillis();
+        leftBankEncoder.setPosition(0);
+        lowOuttake.set(0);
+        highOuttake.set(0);
+        intakeBrush.set(0);
+        transferToOuttake.set(0);
     }
 
     @Override
     public void autonomousPeriodic() {
         //EDIT THE QUESTION MARK
-        //if (leftBankEncoder.getPosition() > ?){
-        myDrive.tankDrive(-0.2, 0.2);
-        //}
-        //else {
-          //  runIntake();
-            //runTransfer();
-            //runOutput();
-        //}
+        if (leftBankEncoder.getPosition() < 45){
+            myDrive.tankDrive(0.5, -0.5);
+            System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
+        }
+        else {
+            lowOuttake.set(0.75);
+            highOuttake.set(0.5);
+            intakeBrush.set(intakeBrushPower);
+            transferToOuttake.set(intakeCompPower);
+        }
+        
+        if (outtakeRotatorEncoder.getDistance() > -245000){
+            outtakeRotator.set(0.4);
+            System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
+        }
+        else{
+            outtakeRotator.set(0);
+        }
+        
         
 
     }
@@ -276,7 +294,6 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         intakeBrush.set(0);
-        intakeComp.set(0);
         outtakeRotator.set(0);
         transferToOuttake.set(0);
         lowOuttake.set(0);
@@ -288,17 +305,20 @@ public class Robot extends TimedRobot {
         runIntake();
 
         runOutput();
-
+        //-238814
         runTransfer();
 
         runHang();
-        if (joystick.getRawButton(joystickButtonOuttakeRotatorPos) && outtakeRotatorEncoder.getDistance() > -287000 && outtakeRotatorEncoder.getDistance() < 287000){
-            outtakeRotator.set(outtakeRotatorPower);
+        
+        if (joystick2.getRawButton(joystickButtonOuttakeRotatorPos)){
+             outtakeRotator.set(outtakeRotatorPower);
+             System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
         }
-        else if (joystick.getRawButton(joystickButtonOuttakeRotatorNeg) && outtakeRotatorEncoder.getDistance() > -287000 && outtakeRotatorEncoder.getDistance() < 287000){
+        else if (joystick2.getRawButton(joystickButtonOuttakeRotatorNeg)){
             outtakeRotator.set(-outtakeRotatorPower);
+            System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
         }
-        if (joystick.getRawButton(joystickButtonReverseBrush)){
+        if (joystick2.getRawButton(joystickButtonReverseBrush)){
             intakeBrush.set(-intakeBrushPower);
         }
     }
@@ -340,13 +360,13 @@ public class Robot extends TimedRobot {
     private void detectLimelightDriverMode() {
         if (enableLimelightDriving) {
             // Toggle seeking red or blue balls
-            if (joystick.getRawButtonPressed(joystickButtonDrivingSeekBlue)) {
+            if (joystick2.getRawButtonPressed(joystickButtonDrivingSeekBlue)) {
                 System.out.println("Seeking Blue");
                 NetworkTableInstance.getDefault().getTable(limelightDrivingId).getEntry("pipeline")
                         .setNumber(limelight_pipeline_blue);
             }
 
-            if (joystick.getRawButtonPressed(joystickButtonDrivingSeekRed)) {
+            if (joystick2.getRawButtonPressed(joystickButtonDrivingSeekRed)) {
                 System.out.println("Seeking Red");
                 NetworkTableInstance.getDefault().getTable(limelightDrivingId).getEntry("pipeline")
                         .setNumber(limelight_pipeline_red);
@@ -372,7 +392,7 @@ public class Robot extends TimedRobot {
             //System.out.println("Turn Raw=" + rawAxisForwardBack + " Value=" + fowardBackValue);
         }
         */
-        double axis2 = joystick.getRawAxis(2)*0.8;
+        double axis2 = (joystick.getRawAxis(2))*0.8;
         double axis1 = joystick.getRawAxis(1);
         if (axis2 < 0){
             axis2 += Math.min(0.14, -axis2);
@@ -381,15 +401,15 @@ public class Robot extends TimedRobot {
         double joystickRValue = (-axis1-axis2);
         
         
-        System.out.print("joystickLValue: "+joystickLValue+"\n");
-        System.out.print("joystickRValue: "+joystickRValue+"\n");
-        System.out.print("axis1: "+axis1 +"\n");
-        System.out.print("axis2 : "+axis2+"\n");
+        // System.out.print("joystickLValue: "+joystickLValue+"\n");
+        // System.out.print("joystickRValue: "+joystickRValue+"\n");
+        // System.out.print("axis1: "+axis1 +"\n");
+        // System.out.print("axis2 : "+axis2+"\n");
         
         
         myDrive.tankDrive(joystickLValue, -joystickRValue);
-        System.out.println("leftencoder: " + leftBankEncoder.getPosition());
-        System.out.println("rightencoder: " + rightBankEncoder.getPosition());
+        // System.out.println("leftencoder: " + leftBankEncoder.getPosition());
+        // System.out.println("rightencoder: " + rightBankEncoder.getPosition());
     }
 
     /**
@@ -422,7 +442,7 @@ public class Robot extends TimedRobot {
         }
 
         // look for auto-driving
-        if (enableLimelightDriving && joystick.getRawButton(joystickButtonDrivingAuto)) {
+        if (enableLimelightDriving && joystick2.getRawButton(joystickButtonDrivingAuto)) {
             limelightAutoDriver();
 
             return;
@@ -440,7 +460,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick.getRawButton(joystickButtonOutput)) {
+        if (joystick2.getRawButton(joystickButtonOutput)) {
             highOuttake.set(highOuttakePower);
             lowOuttake.set(lowOuttakePower);
 
@@ -471,16 +491,17 @@ public class Robot extends TimedRobot {
         boolean running = false;
 
         // toggle on/of based on button press
-        if (joystick.getRawButtonPressed(joystickButtonIntake)) {
+        if (joystick2.getRawButtonPressed(joystickButtonIntake)) {
             if (!running) {
                 intakeComp.set(intakeCompPower);
                 running = true;
 
                 return;
             }
-
-            intakeComp.set(0.0);
-            running = false;
+            else{
+                intakeComp.set(0.0);
+                running = false;
+            }
         }
     }
 
@@ -490,7 +511,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick.getRawButton(joystickButtonOutput)) {
+        if (joystick2.getRawButton(joystickButtonOutput)) {
             intakeBrush.set(intakeBrushPower);
          
             return;
@@ -509,7 +530,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick.getRawButton(joystickButtonOutput)) {
+        if (joystick2.getRawButton(joystickButtonOutput)) {
             transferToOuttake.set(transferToOuttakePower);
 
             return;
