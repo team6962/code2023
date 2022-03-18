@@ -54,8 +54,8 @@ public class Robot extends TimedRobot {
     private int platformCurrent = platformMain;
 
     // driving systems
-    private boolean enableDrive = false;
-    private boolean enableLimelightDriving = false;
+    private boolean enableDrive = true;
+    private boolean enableLimelightDriving = true;
 
     // shooting systems
     private boolean enableIntake = true;
@@ -84,16 +84,19 @@ public class Robot extends TimedRobot {
     Joystick joystick;
     private int joystickButtonOutput = 1;
     private int joystickButtonIntake = 2;
-    private int joystickButtonKillHang = 3;
-    private int joystickButtonCommenceHang = 4;
-    private int joystickButtonTransfer = 5;
+    private int joystickButtonOuttakeRotatorNeg = 3;
+    private int joystickButtonOuttakeRotatorPos = 5;
+    private int joystickButtonReverseBrush = 6;
     private int joystickButtonDrivingAuto = 7;
     private int joystickButtonDrivingSeekBlue = 8;
     private int joystickButtonDrivingSeekRed = 9;
+    private int joystickButtonKillHang = 12;
+    private int joystickButtonCommenceHang = 11;
+    
 
     // Drive speed limits
     double limitForwardBackSpeed = 0.80; 
-    double limitTwistSpeed = 0.50;
+    double limitTwistSpeed = 0.8;
 
     // Hang
     boolean commenceHang;
@@ -181,10 +184,12 @@ public class Robot extends TimedRobot {
     Spark intakeComp;
     private double intakeBrushPower = 1.0;
     private double intakeCompPower = 1.0;
+    private double outtakeRotatorPower = 0.5;
 
     double start;
     boolean stopzero;
     // Encoders
+    Encoder outtakeRotatorEncoder;
     Encoder leadScrewsEncoder;
     RelativeEncoder frontLeftClimbEncoder;
     RelativeEncoder frontRightClimbEncoder;
@@ -236,14 +241,14 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         //EDIT THE QUESTION MARK
-        if (leftBankEncoder.getPosition() > ?){
-            myDrive.tankDrive(-0.7, -0.7);
-        }
-        else {
-            runIntake();
-            runTransfer();
-            runOutput();
-        }
+        //if (leftBankEncoder.getPosition() > ?){
+        myDrive.tankDrive(-0.2, -0.2);
+        //}
+        //else {
+          //  runIntake();
+            //runTransfer();
+            //runOutput();
+        //}
         
 
     }
@@ -252,12 +257,24 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         start = System.currentTimeMillis();
         boolean commenceHang;
-
+        myDrive.tankDrive(0,0);
+        intakeBrush.set(0);
+        intakeComp.set(0);
+        outtakeRotator.set(0);
+        transferToOuttake.set(0);
+        lowOuttake.set(0);
+        highOuttake.set(0);
         logDisabledSystems();
     }
 
     @Override
     public void teleopPeriodic() {
+        intakeBrush.set(0);
+        intakeComp.set(0);
+        outtakeRotator.set(0);
+        transferToOuttake.set(0);
+        lowOuttake.set(0);
+        highOuttake.set(0);
         detectLimelightDriverMode();
 
         runDrive();
@@ -269,6 +286,15 @@ public class Robot extends TimedRobot {
         runTransfer();
 
         runHang();
+        if (joystick.getRawButton(joystickButtonOuttakeRotatorPos) && outtakeRotatorEncoder.getDistance() > -287000 && outtakeRotatorEncoder.getDistance() < 287000){
+            outtakeRotator.set(outtakeRotatorPower);
+        }
+        else if (joystick.getRawButton(joystickButtonOuttakeRotatorNeg) && outtakeRotatorEncoder.getDistance() > -287000 && outtakeRotatorEncoder.getDistance() < 287000){
+            outtakeRotator.set(-outtakeRotatorPower);
+        }
+        if (joystick.getRawButton(joystickButtonReverseBrush)){
+            intakeBrush.set(-intakeBrushPower);
+        }
     }
 
     @Override
@@ -332,27 +358,51 @@ public class Robot extends TimedRobot {
         double rawAxisForwardBack = -joystick.getRawAxis(1);
         double fowardBackValue = rawAxisForwardBack * limitForwardBackSpeed;
 
-        if (Math.abs(fowardBackValue) < 0.1) {
+       /* if (Math.abs(fowardBackValue) < 0.1) {
             fowardBackValue = 0.0;
         }
 
         if (fowardBackValue > 0.1) {
-            System.out.println("Turn Raw=" + rawAxisForwardBack + " Value=" + fowardBackValue);
+            //System.out.println("Turn Raw=" + rawAxisForwardBack + " Value=" + fowardBackValue);
         }
-
-        double joystickLValue = rawAxisTwist + fowardBackValue;
-        double joystickRValue = rawAxisTwist - fowardBackValue;
+        */
+        double joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*limitTwistSpeed));
+        double joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*limitTwistSpeed));
+        /*
+        if (joystick.getRawAxis(1) > 0){
+            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
+            joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
+        }
+        else if(joystick.getRawAxis(1) < 0 && joystick.getRawAxis(2) < 0.11 && joystick.getRawAxis(2) > -0.11){
+            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
+            joystickRValue = joystickLValue;  
+            System.out.print("here");
+        }
+        else{
+            joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
+            joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
+        }
+        */
+        
+        //double joystickLValue = (-joystick.getRawAxis(1)+(joystick.getRawAxis(2)*0.8));
+        //double joystickRValue = (-joystick.getRawAxis(1)-(joystick.getRawAxis(2)*0.8));
 
         // TODO: Apply curves?
-        double leftSpeed = joystickLValue * limitTwistSpeed;
-        double rightSpeed = joystickRValue * limitTwistSpeed;
+        //double leftSpeed = joystickLValue * limitTwistSpeed;
+        //double rightSpeed = joystickRValue * limitTwistSpeed;
 
         // don't log very low values, just when the joystick is actually driving
-        if (leftSpeed > 0.1 || leftSpeed < -0.1 || rightSpeed > 0.1 || rightSpeed < -0.1) {
-            System.out.println("rawAxisDrive=" + rawAxisTwist + " joystickLValue=" + joystickLValue + " leftSpeed=" + leftSpeed + " joystickRValue=" + joystickRValue + " rightSpeed=" + rightSpeed);
+        /*if (leftSpeed > 0.1 || leftSpeed < -0.1 || rightSpeed > 0.1 || rightSpeed < -0.1) {
+            //System.out.println("rawAxisDrive=" + rawAxisTwist + " joystickLValue=" + joystickLValue + " leftSpeed=" + leftSpeed + " joystickRValue=" + joystickRValue + " rightSpeed=" + rightSpeed);
         }
-
-        myDrive.tankDrive(leftSpeed, rightSpeed);
+        */
+        if(joystick.getRawButton(11)){
+            System.out.print("joystickLValue: "+joystickLValue+"\n");
+            System.out.print("joystickRValue: "+joystickRValue+"\n");
+            System.out.print("axis1: "+joystick.getRawAxis(1) +"\n");
+            System.out.print("axis2 : "+joystick.getRawAxis(2)+"\n");
+        }
+        myDrive.tankDrive(joystickLValue, -joystickRValue);
     }
 
     /**
@@ -490,8 +540,8 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        double hangspeed = 0.5;
-        double leadspeed = 0.4;
+        double hangspeed = 0.8;
+        double leadspeed = 0.6;
         leadScrewPos = -leadScrewsEncoder.getDistance();
         frontBarLPos = frontLeftClimbEncoder.getPosition();
         frontBarRPos = frontRightClimbEncoder.getPosition();
@@ -702,7 +752,7 @@ public class Robot extends TimedRobot {
         highOuttake = new Spark(4);
         lowOuttake = new Spark(3);
         lowOuttake.setInverted(true);
-
+        outtakeRotatorEncoder = new Encoder (2,3);
         // transfer motors
         transferToOuttake = new Spark(2);
         transferToOuttake.setInverted(true);
