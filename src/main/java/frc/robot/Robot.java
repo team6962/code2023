@@ -96,7 +96,7 @@ public class Robot extends TimedRobot {
     private int joystickButtonCommenceHang = 11;
     private int joystickButtonKillHang = 12;
     
-    
+    double now;
 
     // Drive speed limits
     double limitForwardBackSpeed = 0.80; 
@@ -246,7 +246,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
-        // start = System.currentTimeMillis();
+        start = System.currentTimeMillis();
         leftBankEncoder.setPosition(0);
         lowOuttake.set(0);
         highOuttake.set(0);
@@ -256,14 +256,20 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousPeriodic() {
+        now = System.currentTimeMillis() - start;
         //EDIT THE QUESTION MARK
-        if (leftBankEncoder.getPosition() < 45){
+        if (leftBankEncoder.getPosition() < 22.5){
             myDrive.tankDrive(0.5, -0.5);
             System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
         }
-        else if (leftBankEncoder.getPosition() >= 45){
+        else if(leftBankEncoder.getPosition() > 21 && leftBankEncoder.getPosition() < 45){
+            myDrive.tankDrive(0.35,-0.35);
+            System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
+        }
+        else if (leftBankEncoder.getPosition() >= 44){
+            myDrive.tankDrive(0,0);
             lowOuttake.set(0.75);
-            highOuttake.set(0.6);
+            highOuttake.set(0.5);
             intakeBrush.set(intakeBrushPower);
             intakeComp.set(0.8);
             transferToOuttake.set(intakeCompPower);
