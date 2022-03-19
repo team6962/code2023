@@ -84,10 +84,12 @@ public class Robot extends TimedRobot {
     Joystick joystick;
     Joystick joystick2;
     private int joystickButtonOutput = 1;
+    private int joystickButtonOutputLow = 11;
+    private int joystickButtonOutputMid = 12;
     private int joystickButtonIntake = 2;
-    private int joystickButtonOuttakeRotatorNeg = 3;
-    private int joystickButtonOuttakeRotatorPos = 5;
-    private int joystickButtonDrivingAuto = 4;
+    private int joystickButtonOuttakeRotatorNeg = 4;
+    private int joystickButtonOuttakeRotatorPos = 3;
+    private int joystickButtonDrivingAuto = 1;
     private int joystickButtonDrivingSeekBlue = 7;
     private int joystickButtonDrivingSeekRed = 8;
     private int joystickButtonReverseBrush = 6;
@@ -114,11 +116,11 @@ public class Robot extends TimedRobot {
         /* rotate to allow high hang grab, rotate using lead screw */
         // Change 400
         //2
-        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, false),
+        new HangStep(HM.NONE, 0, HM.UP, 450, HM.NONE, 0, true),
         //Rotate a little more (10 ticks)
         //Change 120
         //3
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, false),
+        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.UP, 177, true),
         //Retract front bar (50 ticks)
         //Change 350
         //4
@@ -208,6 +210,7 @@ public class Robot extends TimedRobot {
     double frontBarRPos;
     double backBarLPos;
     double backBarRPos;
+    boolean running = false;
 
     final int WIDTH = 640;
 
@@ -258,10 +261,11 @@ public class Robot extends TimedRobot {
             myDrive.tankDrive(0.5, -0.5);
             System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
         }
-        else {
+        else if (leftBankEncoder.getPosition() >= 45){
             lowOuttake.set(0.75);
-            highOuttake.set(0.5);
+            highOuttake.set(0.6);
             intakeBrush.set(intakeBrushPower);
+            intakeComp.set(0.8);
             transferToOuttake.set(intakeCompPower);
         }
         
@@ -360,13 +364,13 @@ public class Robot extends TimedRobot {
     private void detectLimelightDriverMode() {
         if (enableLimelightDriving) {
             // Toggle seeking red or blue balls
-            if (joystick2.getRawButtonPressed(joystickButtonDrivingSeekBlue)) {
+            if (joystick.getRawButtonPressed(joystickButtonDrivingSeekBlue)) {
                 System.out.println("Seeking Blue");
                 NetworkTableInstance.getDefault().getTable(limelightDrivingId).getEntry("pipeline")
                         .setNumber(limelight_pipeline_blue);
             }
 
-            if (joystick2.getRawButtonPressed(joystickButtonDrivingSeekRed)) {
+            if (joystick.getRawButtonPressed(joystickButtonDrivingSeekRed)) {
                 System.out.println("Seeking Red");
                 NetworkTableInstance.getDefault().getTable(limelightDrivingId).getEntry("pipeline")
                         .setNumber(limelight_pipeline_red);
@@ -422,13 +426,14 @@ public class Robot extends TimedRobot {
         if (m_LimelightHasValidTarget) {
             // has a target
             System.out.println("Auto Drive=" + m_LimelightDriveCommand + " Steer=" + m_LimelightSteerCommand);
-            myDrive.arcadeDrive(m_LimelightDriveCommand, m_LimelightSteerCommand);
+            myDrive.arcadeDrive(m_LimelightSteerCommand * 0.3, 0.0);
 
             return;
         }
 
         // seek a target by spinning in place
-        myDrive.arcadeDrive(0.0, 0.5);
+        
+        //myDrive.arcadeDrive(0.0, 0.5);
     }
 
     /**
@@ -442,7 +447,7 @@ public class Robot extends TimedRobot {
         }
 
         // look for auto-driving
-        if (enableLimelightDriving && joystick2.getRawButton(joystickButtonDrivingAuto)) {
+        if (enableLimelightDriving && joystick.getRawButton(joystickButtonDrivingAuto)) {
             limelightAutoDriver();
 
             return;
@@ -466,6 +471,18 @@ public class Robot extends TimedRobot {
 
             return;
         } 
+        else if (joystick2.getRawButton(joystickButtonOutputMid)) {
+            highOuttake.set(0.55);
+            lowOuttake.set(0.55);
+
+            return;
+        }
+        else if (joystick2.getRawButton(joystickButtonOutputLow)) {
+            highOuttake.set(0.35);
+            lowOuttake.set(0.5);
+
+            return;
+        }
 
         highOuttake.set(0.0);
         lowOuttake.set(0.0);
@@ -488,15 +505,13 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        boolean running = false;
-
         // toggle on/of based on button press
         if (joystick2.getRawButtonPressed(joystickButtonIntake)) {
             if (!running) {
                 intakeComp.set(intakeCompPower);
                 running = true;
 
-                return;
+                return; 
             }
             else{
                 intakeComp.set(0.0);
@@ -511,7 +526,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick2.getRawButton(joystickButtonOutput)) {
+        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputMid)) {
             intakeBrush.set(intakeBrushPower);
          
             return;
@@ -530,7 +545,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick2.getRawButton(joystickButtonOutput)) {
+        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputMid)) {
             transferToOuttake.set(transferToOuttakePower);
 
             return;
