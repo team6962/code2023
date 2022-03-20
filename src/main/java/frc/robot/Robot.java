@@ -83,19 +83,20 @@ public class Robot extends TimedRobot {
     // overrides these
     Joystick joystick;
     Joystick joystick2;
-    private int joystickButtonOutput = 1;
-    private int joystickButtonOutputLow = 11;
-    private int joystickButtonOutputMid = 12;
-    private int joystickButtonIntake = 2;
-    private int joystickButtonOuttakeRotatorNeg = 4;
-    private int joystickButtonOuttakeRotatorPos = 3;
-    private int joystickButtonDrivingAuto = 1;
-    private int joystickButtonDrivingSeekBlue = 7;
-    private int joystickButtonDrivingSeekRed = 8;
-    private int joystickButtonReverseBrush = 6;
-    private int joystickButtonCommenceHang = 11;
-    private int joystickButtonKillHang = 12;
-    
+    private int joystickButtonOutput = 1; //2
+    private int joystickButtonOutputLow = 11; //2
+    private int joystickButtonOutputHigh = 12; //2
+    private int joystickButtonIntake = 2; //2
+    private int joystickButtonOuttakeRotatorNeg = 4; //2
+    private int joystickButtonOuttakeRotatorPos = 3; //2
+    private int joystickButtonDrivingAuto = 1; //1
+    private int joystickButtonDrivingSeekBlue = 7; //1
+    private int joystickButtonDrivingSeekRed = 8; //1
+    private int joystickButtonReverseBrush = 6;//2
+    private int joystickButtonCommenceHang = 11;//1
+    private int joystickButtonKillHang = 12;//1
+    private int joystickButtonResetHang = 9;//1
+    private int joystickButtonCreep = 2;//1
     double now;
 
     // Drive speed limits
@@ -109,6 +110,7 @@ public class Robot extends TimedRobot {
     HangStep[] hangSteps = {
         /* initial arm raise, set back bar to height of 350 */
         //0
+        //CHANGE
         new HangStep(HM.UP, 380, HM.NONE, 0, HM.UP, 140, true),
         /* first lift, list back bar to height of 20*/
         //1
@@ -133,14 +135,14 @@ public class Robot extends TimedRobot {
         //6
         new HangStep(HM.DOWN, 120, HM.NONE, 0, HM.NONE, 0, false),
         //7
-        new HangStep(HM.NONE, 0, HM.DOWN, -4, HM.DOWN, -28, false),
+        new HangStep(HM.NONE, 0, HM.DOWN, -6, HM.DOWN, -28, false),
         //Lead Screw goes to maxium
         //rear to 380
         //8
-        new HangStep(HM.UP, 440, HM.NONE, 0, HM.NONE, 0, false),
+        new HangStep(HM.UP, 440, HM.DOWN, -6, HM.NONE, 0, false),
         //Lead screw to 170
         //9
-        new HangStep(HM.NONE, 0, HM.NONE, 0, HM.DOWN, -115, false),
+        new HangStep(HM.NONE, 0, HM.DOWN, -6, HM.DOWN, -115, false),
         //10
         new HangStep(HM.DOWN, 420, HM.NONE, 0, HM.NONE, 0, true),
         //11
@@ -193,7 +195,7 @@ public class Robot extends TimedRobot {
     Spark intakeComp;
     private double intakeBrushPower = 1.0;
     private double intakeCompPower = 1.0;
-    private double outtakeRotatorPower = 0.5;
+    private double outtakeRotatorPower = 0.6;
 
     double start;
     boolean stopzero;
@@ -252,6 +254,8 @@ public class Robot extends TimedRobot {
         highOuttake.set(0);
         intakeBrush.set(0);
         transferToOuttake.set(0);
+        leftBankEncoder.setPosition(0);
+        outtakeRotatorEncoder.reset();
     }
 
     @Override
@@ -259,12 +263,13 @@ public class Robot extends TimedRobot {
         now = System.currentTimeMillis() - start;
         //EDIT THE QUESTION MARK
         if (leftBankEncoder.getPosition() < 22.5){
-            myDrive.tankDrive(0.5, -0.5);
+            myDrive.tankDrive(0.6, -0.6);
             System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
         }
         else if(leftBankEncoder.getPosition() > 21 && leftBankEncoder.getPosition() < 45){
-            myDrive.tankDrive(0.35,-0.35);
-            System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
+            intakeComp.set(intakeCompPower);
+            myDrive.tankDrive(0.4,-0.4);
+            System.out.println("Part2 - LeftbankEncoder: " + leftBankEncoder.getPosition());
         }
         else if (leftBankEncoder.getPosition() >= 44){
             myDrive.tankDrive(0,0);
@@ -276,7 +281,7 @@ public class Robot extends TimedRobot {
         }
         
         if (outtakeRotatorEncoder.getDistance() > -245000){
-            outtakeRotator.set(0.4);
+            outtakeRotator.set(0.5);
             System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
         }
         else{
@@ -320,6 +325,8 @@ public class Robot extends TimedRobot {
 
         runHang();
         
+        resetHang();
+        
         if (joystick2.getRawButton(joystickButtonOuttakeRotatorPos)){
              outtakeRotator.set(outtakeRotatorPower);
              System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
@@ -330,6 +337,12 @@ public class Robot extends TimedRobot {
         }
         if (joystick2.getRawButton(joystickButtonReverseBrush)){
             intakeBrush.set(-intakeBrushPower);
+            lowOuttake.set(-0.6);
+            highOuttake.set(-0.6);
+            transferToOuttake.set(-0.6);
+        }
+        if (joystick.getRawButton(joystickButtonCreep)){
+            myDrive.tankDrive(0.25, -0.25);
         }
     }
 
@@ -445,7 +458,36 @@ public class Robot extends TimedRobot {
     /**
      * Runs all of the Drive system operations.
      */
-    private void runDrive() {
+    private void resetHang(){
+        if (joystick.getRawButton(joystickButtonResetHang)){
+            if (frontBarLPos > 0){
+                frontLeftClimb.set(-0.5);
+            }
+            else{
+                frontLeftClimb.set(0);
+            }
+            if (frontBarRPos > 0){
+                frontRightClimb.set(-0.5);
+            }
+            else{
+                frontRightClimb.set(0);
+            }
+            if (backBarLPos > 0){
+                backLeftClimb.set(-0.5);
+            }
+            else{
+                backLeftClimb.set(0);
+            }
+            if (backBarRPos > 0){
+                backRightClimb.set(-0.5);
+            }
+            else{
+                backRightClimb.set(0);
+            }
+        }
+        
+    }
+        private void runDrive() {
         if (!enableDrive) {
             myDrive.tankDrive(0.0, 0.0);
 
@@ -477,15 +519,15 @@ public class Robot extends TimedRobot {
 
             return;
         } 
-        else if (joystick2.getRawButton(joystickButtonOutputMid)) {
-            highOuttake.set(0.55);
-            lowOuttake.set(0.55);
+        else if (joystick2.getRawButton(joystickButtonOutputHigh)) {
+            highOuttake.set(0.75);
+            lowOuttake.set(0.9);
 
             return;
         }
         else if (joystick2.getRawButton(joystickButtonOutputLow)) {
-            highOuttake.set(0.35);
-            lowOuttake.set(0.5);
+            highOuttake.set(0.55);
+            lowOuttake.set(0.55);
 
             return;
         }
@@ -532,7 +574,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputMid)) {
+        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputHigh)) {
             intakeBrush.set(intakeBrushPower);
          
             return;
@@ -551,7 +593,7 @@ public class Robot extends TimedRobot {
         }
 
         // toggle on/off based on holding output button
-        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputMid)) {
+        if (joystick2.getRawButton(joystickButtonOutput) || joystick2.getRawButton(joystickButtonOutputLow) || joystick2.getRawButton(joystickButtonOutputHigh)) {
             transferToOuttake.set(transferToOuttakePower);
 
             return;
@@ -569,8 +611,8 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        double hangspeed = 0.8;
-        double leadspeed = 0.6;
+        double hangspeed = 0.9;
+        double leadspeed = 0.55;
         leadScrewPos = -leadScrewsEncoder.getDistance();
         frontBarLPos = frontLeftClimbEncoder.getPosition();
         frontBarRPos = frontRightClimbEncoder.getPosition();
