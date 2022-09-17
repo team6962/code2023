@@ -279,15 +279,16 @@ public class Robot extends TimedRobot {
             intakeComp.set(0.8);
             transferToOuttake.set(intakeCompPower);
         }
-        
+        /*
         if (outtakeRotatorEncoder.getDistance() > -245000){
-            outtakeRotator.set(0.5);
+            outtakeRotator.set(-0.5);
             System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
+       
         }
         else{
             outtakeRotator.set(0);
         }
-        
+        */
         
 
     }
@@ -520,14 +521,14 @@ public class Robot extends TimedRobot {
             return;
         } 
         else if (joystick2.getRawButton(joystickButtonOutputHigh)) {
-            highOuttake.set(0.75);
-            lowOuttake.set(0.9);
+            highOuttake.set(0.65);
+            lowOuttake.set(0.8);
 
             return;
         }
         else if (joystick2.getRawButton(joystickButtonOutputLow)) {
             highOuttake.set(0.55);
-            lowOuttake.set(0.55);
+            lowOuttake.set(0.45);
 
             return;
         }
@@ -633,10 +634,11 @@ public class Robot extends TimedRobot {
          
         
         // Next Step
-        if (hangStepDone && joystick.getRawButtonPressed(joystickButtonCommenceHang)) {
+        /*if (hangStepDone && joystick.getRawButtonPressed(joystickButtonCommenceHang)) {
             hangStepDone = false;
             System.out.print("Button 11, hangstepdone: " + hangStepDone + " Hangstep: " + hangStep);
         }
+        */
         // Kill Switch
         if (joystick.getRawButtonPressed(joystickButtonKillHang)) {
             System.out.print("Backleft: " + backBarLPos + "\n");
