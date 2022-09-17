@@ -101,7 +101,7 @@ public class Robot extends TimedRobot {
 
     // Drive speed limits
     double limitForwardBackSpeed = 0.80; 
-    double limitTwistSpeed = 0.8;
+    double limitTwistSpeed = 0.81;
 
     // Hang
     boolean commenceHang;
@@ -155,7 +155,7 @@ public class Robot extends TimedRobot {
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
     DifferentialDrive myDrive;
-
+    
     
     //STRICTLY FOR ENCODERS
     CANSparkMax rightBankEncoderHold;
