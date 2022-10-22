@@ -259,8 +259,6 @@ public class Robot extends TimedRobot {
         now = System.currentTimeMillis() - start;
 
         // EDIT ME!!!
-
-        // i am in dire need of help
         
     }
 
