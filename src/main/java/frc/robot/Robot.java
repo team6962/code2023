@@ -257,34 +257,8 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         now = System.currentTimeMillis() - start;
-        //EDIT THE QUESTION MARK
-        if (leftBankEncoder.getPosition() < 22.5){
-            myDrive.tankDrive(0.5, -0.5);
-            System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
-        }
-        else if(leftBankEncoder.getPosition() > 21 && leftBankEncoder.getPosition() < 45){
-            myDrive.tankDrive(0.35,-0.35);
-            System.out.println("LeftbankEncoder: " + leftBankEncoder.getPosition());
-        }
-        else if (leftBankEncoder.getPosition() >= 44){
-            myDrive.tankDrive(0,0);
-            lowOuttake.set(0.75);
-            highOuttake.set(0.5);
-            intakeBrush.set(intakeBrushPower);
-            intakeComp.set(0.8);
-            transferToOuttake.set(intakeCompPower);
-        }
-        
-        if (outtakeRotatorEncoder.getDistance() > -245000){
-            outtakeRotator.set(0.4);
-            System.out.println("Rotator Encoder: " + outtakeRotatorEncoder.getDistance());
-        }
-        else{
-            outtakeRotator.set(0);
-        }
-        
-        
 
+        // EDIT ME!!!
     }
 
     @Override
