@@ -258,7 +258,17 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
         now = System.currentTimeMillis() - start;
 
-        // EDIT ME!!!
+        int distance = 100
+
+        if(now % (distance * 2) < distance){
+            myDrive.tankDrive(0.5,0.5);
+        } else if (now % (distance * 2) < distance * 2) {
+            myDrive.tankDrive(-0.5, -0.5);
+        }
+    }
+        
+        
+
     }
 
     @Override
