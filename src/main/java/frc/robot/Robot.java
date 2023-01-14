@@ -54,17 +54,17 @@ public class Robot extends TimedRobot {
     private int platformCurrent = platformMain;
 
     // driving systems
-    private boolean enableDrive = true;
-    private boolean enableLimelightDriving = true;
+    private boolean enableDrive = false;
+    private boolean enableLimelightDriving = false;
 
     // shooting systems
-    private boolean enableIntake = true;
-    private boolean enableTransfer = true;
-    private boolean enableOutput = true;
+    private boolean enableIntake = false;
+    private boolean enableTransfer = false;
+    private boolean enableOutput = false;
     private boolean enableLimelightShooting = false;
 
     // hang systems
-    private boolean enableHang = true;
+    private boolean enableHang = false;
 
     // Limelight driving
     private String limelightDrivingId = "limelight-drive";
@@ -183,7 +183,8 @@ public class Robot extends TimedRobot {
     private double lowOuttakePower = 0.75;
 
 
-
+    Compressor c;
+    Solenoid exampleSolenoid;
 
 
     private double transferToOuttakePower = 0.8;
@@ -303,6 +304,18 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
+        boolean enabled = c.enabled();
+        boolean pressureSwitch = c.getPressureSwitchValue();
+        double current = c.getCompressorCurrent();
+
+        if (joystick2.getRawButton(7)){
+            exampleSolenoid.set(true);
+        }
+
+        if (joystick2.getRawButton(8)){
+            exampleSolenoid.set(false);
+        }
+
         intakeBrush.set(0);
         outtakeRotator.set(0);
         transferToOuttake.set(0);
@@ -798,6 +811,13 @@ public class Robot extends TimedRobot {
         backRightClimbEncoder = backRightClimb.getEncoder();
 
         stopzero = true;
+
+        c = new Compressor(0);
+
+        exampleSolenoid = new Solenoid(1);
+
+        c.setClosedLoopControl(true);
+        c.setClosedLoopControl(false);
 
         // TODO: Currently Hang overloads all the joystick buttons for debugging,
         // disable all other systems to prevent accidents
