@@ -19,8 +19,8 @@ public class Robot extends TimedRobot {
     private boolean enableDrive = true;
 
     // Joystick
-    Joystick joystick0;
-    Joystick joystick1;
+    Joystick driveJoystick;
+    Joystick utilityJoystick1;
 
     // Drive speed limits
     double speedLimit = 0.8; 
@@ -50,8 +50,8 @@ public class Robot extends TimedRobot {
         
         initMainRobot();
 
-        joystick0 = new Joystick(0);
-        joystick1 = new Joystick(1);
+        driveJoystick = new Joystick(0);
+        utilityJoystick1 = new Joystick(1);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class Robot extends TimedRobot {
      * @todo Currently janky, needs testing and fine-tuning.
      */
     private void teleopDriver() {
-        double rawAxisForwardBack = -joystick.getRawAxis(1);
-        double rawAxisTwist = joystick.getRawAxis(2);
+        double rawAxisForwardBack = -driveJoystick.getRawAxis(1);
+        double rawAxisTwist = driveJoystick.getRawAxis(2);
 
         double limitAxisForwardBack = rawAxisSpeed * speedLimit
         double limitAxisTwist = rawAxisTwist * twistLimit
