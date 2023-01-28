@@ -91,8 +91,8 @@ public class Robot extends TimedRobot {
 
     // Initializes main robot
     private void initMainRobot() {
-        leftBank = new PWMSparkMax(1);
-        rightBank = new PWMSparkMax(2);
+        leftBank = new PWMSparkMax(0);
+        rightBank = new PWMSparkMax(1);
         
         // leftBankEncoder = leftBank.getEncoder();
         // rightBankEncoder = rightBank.getEncoder();
