@@ -23,8 +23,10 @@ public class Robot extends TimedRobot {
     Joystick utilityJoystick;
 
     // Drive speed limits
-    double speedLimit = 0.8;
-    double twistLimit = 0.8;
+    double speedLimit = 0.5;
+    double twistLimit = 0.5;
+
+    double twistSoftZone = 0.2;
 
     // Drive Motor Controllers
     PWMSparkMax rightBank;
@@ -114,15 +116,21 @@ public class Robot extends TimedRobot {
 
     // Runs periodically when driving in teleoperated mode
     private void teleopDrive() {
-        double rawAxisForwardBack = -driveJoystick.getRawAxis(1);
+        double rawAxisForwardBack = driveJoystick.getRawAxis(1);
         double rawAxisTwist = driveJoystick.getRawAxis(2);
+        
+        if (Math.abs(rawAxisTwist) < twistSoftZone) {
+            rawAxisTwist = 0.0;
+        }
+        
+        double twistSign = Math.signum(rawAxisTwist);
 
         double limitAxisForwardBack = rawAxisForwardBack * speedLimit;
-        double limitAxisTwist = rawAxisTwist * twistLimit;
+        double limitAxisTwist = mapNumber(Math.abs(rawAxisTwist), twistSoftZone, 1, 0, twistLimit) * twistSign;
         
-        double leftBankSpeed = limitAxisForwardBack + limitAxisTwist;
-        double rightBankSpeed = limitAxisForwardBack - limitAxisTwist;
-        
+        double leftBankSpeed = limitAxisForwardBack - limitAxisTwist;
+        double rightBankSpeed = limitAxisForwardBack + limitAxisTwist;
+
         myDrive.tankDrive(leftBankSpeed, -rightBankSpeed);
     }
 
@@ -131,5 +139,9 @@ public class Robot extends TimedRobot {
         double value = encoder.getPosition();
         encoder.setPosition(0);
         return value;
+    }
+
+    private double mapNumber(double x, double a, double b, double c, double d) {
+        return (x - a) / (b - a) * (d - c) + c;
     }
 }
