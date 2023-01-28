@@ -20,15 +20,15 @@ public class Robot extends TimedRobot {
 
     // Joysticks
     Joystick driveJoystick;
-    Joystick utilityJoystick1;
+    Joystick utilityJoystick;
 
     // Drive speed limits
-    double speedLimit = 0.8; 
+    double speedLimit = 0.8;
     double twistLimit = 0.8;
 
     // Drive Motor Controllers
-    MotorControllerGroup rightBank;
-    MotorControllerGroup leftBank;
+    PWMSparkMax rightBank;
+    PWMSparkMax leftBank;
     DifferentialDrive myDrive;
 
     // Drive Motor Encoders
@@ -45,7 +45,7 @@ public class Robot extends TimedRobot {
         System.out.println("Initializing Robot");
         
         driveJoystick = new Joystick(0);
-        utilityJoystick1 = new Joystick(1);
+        utilityJoystick = new Joystick(1);
 
         initMainRobot();
     }
@@ -73,7 +73,7 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         timeStart = System.currentTimeMillis();
         
-        System.out.println("Initializing Teleoperated Driving")
+        System.out.println("Initializing Teleoperated Driving");
         myDrive.tankDrive(0, 0);
     }
 
@@ -91,11 +91,11 @@ public class Robot extends TimedRobot {
 
     // Initializes main robot
     private void initMainRobot() {
-        leftBank = new CANSparkMax(1, MotorType.kBrushless);
-        rightBank = new CANSparkMax(2, MotorType.kBrushless);
+        leftBank = new PWMSparkMax(1);
+        rightBank = new PWMSparkMax(2);
         
-        leftBankEncoder = leftBank.getEncoder();
-        rightBankEncoder = rightBank.getEncoder();
+        // leftBankEncoder = leftBank.getEncoder();
+        // rightBankEncoder = rightBank.getEncoder();
 
         myDrive = new DifferentialDrive(leftBank, rightBank);
     }
@@ -103,7 +103,7 @@ public class Robot extends TimedRobot {
     // Runs periodically when driving
     private void runDrive() {
         if (!enableDrive) {
-            System.out.println("Drive Disabled")
+            System.out.println("Drive Disabled");
 
             myDrive.tankDrive(0.0, 0.0);
             return;
@@ -117,8 +117,8 @@ public class Robot extends TimedRobot {
         double rawAxisForwardBack = -driveJoystick.getRawAxis(1);
         double rawAxisTwist = driveJoystick.getRawAxis(2);
 
-        double limitAxisForwardBack = rawAxisSpeed * speedLimit
-        double limitAxisTwist = rawAxisTwist * twistLimit
+        double limitAxisForwardBack = rawAxisForwardBack * speedLimit;
+        double limitAxisTwist = rawAxisTwist * twistLimit;
         
         double leftBankSpeed = limitAxisForwardBack + limitAxisTwist;
         double rightBankSpeed = limitAxisForwardBack - limitAxisTwist;
