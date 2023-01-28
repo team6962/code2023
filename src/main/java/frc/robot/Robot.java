@@ -28,8 +28,8 @@ public class Robot extends TimedRobot {
     Joystick utilityJoystick;
 
     // Drive speed limits
-    double straightLimit = 0.5;
-    double twistLimit = 0.5;
+    double straightLimit = 0.6;
+    double twistLimit = 0.6;
 
     double twistDeadZone = 0.2;
     double straightDeadZone = 0.2;
@@ -115,6 +115,7 @@ public class Robot extends TimedRobot {
     private void initMainRobot() {
         leftBank = new PWMSparkMax(0);
         rightBank = new PWMSparkMax(1);
+        rightBank.setInverted(true);
         
         // leftBankEncoder = leftBank.getEncoder();
         // rightBankEncoder = rightBank.getEncoder();
@@ -141,7 +142,7 @@ public class Robot extends TimedRobot {
             if (Math.abs(pitch) > 2.5) {
                 System.out.println(pitch);
                 double speed = (pitch / 90) + (0.35 * Math.signum(pitch));
-                drive.tankDrive(speed, -speed);
+                drive.tankDrive(speed, speed);
                 
                 return;
             }
@@ -163,15 +164,27 @@ public class Robot extends TimedRobot {
 
         double rawLeftBankSpeed = speedStraight - speedTwist;
         double rawRightBankSpeed = speedStraight + speedTwist;
+        
+        double leftSign = Math.signum(rawLeftBankSpeed);
+        double absLeftBank = Math.abs(rawLeftBankSpeed);
 
-        leftBankSpeed += (rawLeftBankSpeed - leftBankSpeed) / 5;
-        rightBankSpeed += (rawRightBankSpeed - rightBankSpeed) / 5;
+        double rightSign = Math.signum(rawRightBankSpeed);
+        double absRightBank = Math.abs(rawRightBankSpeed);
 
-        // if (Math.abs(leftBankSpeed) > straightLimit) {
+        if (absLeftBank > straightLimit) {
+            absLeftBank = straightLimit;
+            rightBankSpeed -= absLeftBank - straightLimit;
+        }
 
-        // }
+        if (absRightBank > straightLimit) {
+            absRightBank = straightLimit;
+            leftBankSpeed -= absRightBank - straightLimit;
+        }
 
-        drive.tankDrive(leftBankSpeed, -rightBankSpeed);
+        leftBankSpeed += ((absLeftBank * leftSign) - leftBankSpeed) / 5;
+        rightBankSpeed += ((absRightBank * rightSign) - rightBankSpeed) / 5;
+
+        drive.tankDrive(leftBankSpeed, rightBankSpeed);
     }
 
     // Resets encoder value and returns position
