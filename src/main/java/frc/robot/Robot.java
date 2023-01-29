@@ -172,13 +172,13 @@ public class Robot extends TimedRobot {
         double absRightBank = Math.abs(rawRightBankSpeed);
 
         if (absLeftBank > straightLimit) {
-            absLeftBank = straightLimit;
             rightBankSpeed -= absLeftBank - straightLimit;
+            absLeftBank = straightLimit;
         }
 
         if (absRightBank > straightLimit) {
-            absRightBank = straightLimit;
             leftBankSpeed -= absRightBank - straightLimit;
+            absRightBank = straightLimit;
         }
 
         leftBankSpeed += ((absLeftBank * leftSign) - leftBankSpeed) / 5;
