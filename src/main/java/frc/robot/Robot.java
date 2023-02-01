@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
     double straightLimit = 0.6;
     double twistLimit = 0.6;
 
-    double twistDeadZone = 0.2;
+    double twistDeadZone = 0.1;
     double straightDeadZone = 0.2;
 
     double baseSpeed = 0.33;
@@ -190,18 +190,18 @@ public class Robot extends TimedRobot {
         double absRightBank = Math.abs(rawRightBankSpeed);
 
         if (absLeftBank > straightLimit) {
-            rightBankSpeed -= absLeftBank - straightLimit;
+            absRightBank -= absLeftBank - straightLimit;
             absLeftBank = straightLimit;
         }
 
         if (absRightBank > straightLimit) {
-            leftBankSpeed -= absRightBank - straightLimit;
+            absLeftBank -= absRightBank - straightLimit;
             absRightBank = straightLimit;
         }
 
         leftBankSpeed += ((absLeftBank * leftSign) - leftBankSpeed) / 5;
         rightBankSpeed += ((absRightBank * rightSign) - rightBankSpeed) / 5;
-
+        
         drive.tankDrive(leftBankSpeed, rightBankSpeed);
     }
 
