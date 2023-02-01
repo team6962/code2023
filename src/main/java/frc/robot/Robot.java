@@ -36,6 +36,12 @@ public class Robot extends TimedRobot {
 
     double baseSpeed = 0.3;
 
+    // Auto Balance Parameters
+
+    double balanceIncline = 35;
+    double balanceSpeed = 0.5;
+    double levelAngle = 2.5;
+
     // Drive Motor Controllers
     PWMSparkMax rightBank;
     PWMSparkMax leftBank;
@@ -139,13 +145,9 @@ public class Robot extends TimedRobot {
     private void runIMU() {
         double pitch = ahrs.getPitch();
         if (driveJoystick.getTrigger()) {
-            if (Math.abs(pitch) > 2.5) {
-                System.out.println(pitch);
-                double speed = (pitch / 90) + (0.35 * Math.signum(pitch));
-                drive.tankDrive(speed, speed);
-                
-                return;
-            }
+            double speed = mapSpeed(mapNumber(pitch, -balanceIncline, balanceIncline, -1, 1), baseSpeed, balanceSpeed, levelAngle / balanceIncline);
+            drive.tankDrive(speed, speed);
+            return;
         } else {
             teleopDrive(); 
 
