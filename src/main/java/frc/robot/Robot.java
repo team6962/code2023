@@ -150,10 +150,8 @@ public class Robot extends TimedRobot {
             return;
         } else {
             teleopDrive(); 
-
             return;
         }
-        drive.tankDrive(0.0, 0.0);
     }
 
     // Runs periodically when driving in teleoperated mode
