@@ -55,8 +55,6 @@ public class Robot extends TimedRobot {
     // IMU
     AHRS ahrs;
 
-    double leftBankSpeed = 0;
-    double rightBankSpeed = 0;
     double balanceSpeed = 0;
 
     // Called when robot is enabled
@@ -198,11 +196,8 @@ public class Robot extends TimedRobot {
             absLeftBank -= absRightBank - straightLimit;
             absRightBank = straightLimit;
         }
-
-        leftBankSpeed += ((absLeftBank * leftSign) - leftBankSpeed) / 5;
-        rightBankSpeed += ((absRightBank * rightSign) - rightBankSpeed) / 5;
         
-        drive.tankDrive(leftBankSpeed, rightBankSpeed);
+        drive.tankDrive((absLeftBank * leftSign), (absRightBank * rightSign));
     }
 
     // Resets encoder value and returns position
