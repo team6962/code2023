@@ -34,12 +34,9 @@ public class Robot extends TimedRobot {
     double twistDeadZone = 0.2;
     double straightDeadZone = 0.2;
 
-    double baseSpeed = 0.3;
+    double baseSpeed = 0.33;
 
     // Auto Balance Parameters
-
-    double balanceIncline = 35;
-    double balanceSpeed = 0.5;
     double levelAngle = 2.5;
 
     // Drive Motor Controllers
@@ -60,6 +57,7 @@ public class Robot extends TimedRobot {
 
     double leftBankSpeed = 0;
     double rightBankSpeed = 0;
+    double balanceSpeed = 0;
 
     // Called when robot is enabled
     @Override
@@ -144,8 +142,28 @@ public class Robot extends TimedRobot {
 
     private void runIMU() {
         double pitch = ahrs.getPitch();
-        if (driveJoystick.getTrigger()) {
-            double speed = mapSpeed(mapNumber(pitch, -balanceIncline, balanceIncline, -1, 1), baseSpeed, balanceSpeed, levelAngle / balanceIncline);
+        // System.out.println(ahrs.getVelocityX());
+        if (driveJoystick.getTrigger() && Math.abs(pitch) > levelAngle) {
+            double speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
+            // if (Math.abs(pitch) < levelAngle) {
+            //     balanceSpeed = 0.0;
+            // }
+
+            // double velocity = ahrs.getVelocityX();
+            
+            // // If not moving when trying to...
+            // if (Math.abs(velocity) < 0.1) {
+            //     balanceSpeed += 0.02;
+            // } else if (Math.abs(velocity) > 0.3) {
+            //     balanceSpeed -= 0.02;
+            // }
+
+            // double speed = (balanceSpeed + baseSpeed) * Math.signum(pitch);
+
+            // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
+            
+            System.out.println(speed);
+
             drive.tankDrive(speed, speed);
             return;
         } else {
