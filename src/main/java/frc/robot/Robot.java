@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -12,23 +13,91 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.SPI;
 
+import com.kauailabs.navx.frc.AHRS;
 
 public class Robot extends TimedRobot {
-    // supported platforms (Main robot and DrivePractice robot)
+
+    // // Drive Enabled?
+    // private boolean enableDrive = true;
+
+    // // Joysticks
+    // Joystick driveJoystick;
+    // Joystick utilityJoystick;
+
+    // // Drive speed limits
+    // double speedLimit = 0.6;
+    // double twistLimit = 0.6;
+
+    // double twistDeadZone = 0.2;
+    // double straightDeadZone = 0.1;
+
+    // double baseSpeed = 0.3;
 
     // // Drive Motor Controllers
     PWMSparkMax testMotor;
+    // PWMSparkMax leftBank;
+    // DifferentialDrive drive;
 
     // Drive Motor Encoders
+    // RelativeEncoder rightBankEncoder;
+    // RelativeEncoder leftBankEncoder;
     Encoder testEncoder;
 
+    // Timings
+    // double timeNow;
+    // double timeStart;
 
-    System.out.println("Initializing Robot");
-    
-    testEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
+    // // IMU
+    // AHRS ahrs;
+
+    // double leftBankSpeed = 0;
+    // double rightBankSpeed = 0;
+
+    // Called when robot is enabled
+    @Override
+    public void robotInit() {
+        System.out.println("Initializing Robot");
+        
+        testEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
+
+
+        // driveJoystick = new Joystick(0);
+        // utilityJoystick = new Joystick(1);
+        
+        // try {
+        //     ahrs = new AHRS(I2C.Port.kMXP);
+        // } catch (RuntimeException ex) {
+        //     DriverStation.reportError("Error instantiating navX XMP: " + ex.getMessage(), true);
+        // }
+        
+        // initMainRobot();
     }
 
+    // Called periodically when robot is enabled
+    @Override
+    public void robotPeriodic() {
+        double dist = testEncoder.getDistance();
+
+        System.out.println(dist);
+
+    }
+
+    // Called when autonomous mode is enabled
+    @Override
+    public void autonomousInit() {
+        // timeStart = System.currentTimeMillis();
+    }
+
+    // Called periodically in autonomous mode
+    @Override
+    public void autonomousPeriodic() {
+        // timeNow = System.currentTimeMillis() - timeStart;
+    }
+
+    // Called when teleoperated mode is enabled
     @Override
     public void teleopInit() {
         // timeStart = System.currentTimeMillis();
@@ -37,19 +106,22 @@ public class Robot extends TimedRobot {
         // drive.tankDrive(0, 0);
     }
 
+    // Called periodically in teleoperated mode
     @Override
     public void teleopPeriodic() {
         // runDrive();
     }
 
+    // Called periodically in test mode
     @Override
     public void testPeriodic() {
+
     }
 
     // Initializes main robot
     private void initMainRobot() {
         // leftBank = new PWMSparkMax(0);
-        testMotor = new PWMSparkMax(0);
+        testMotor = new PWMSparkMax(1);
         testMotor.set(0.07);
         // rightBank.setInverted(true);
         
@@ -59,11 +131,8 @@ public class Robot extends TimedRobot {
         // drive = new DifferentialDrive(leftBank, rightBank);
     }
 
-    /**
-     * Runs all of the Drive system operations.
-     */
+    // Runs periodically when driving
     private void runDrive() {
-
         // if (!enableDrive) {
         //     System.out.println("Drive Disabled");
 
