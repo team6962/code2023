@@ -7,16 +7,18 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+//import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+//import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.networktables.NetworkTableInstance;
+//import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.SPI;
+//import edu.wpi.first.wpilibj.SPI;
 
 import com.kauailabs.navx.frc.AHRS;
+
+
 
 public class Robot extends TimedRobot {
 
@@ -34,7 +36,7 @@ public class Robot extends TimedRobot {
     double twistDeadZone = 0.1;
     double straightDeadZone = 0.2;
 
-    double baseSpeed = 0.33;
+    double baseSpeed = 0.1;
 
     // Auto Balance Parameters
     double levelAngle = 2.5;
@@ -48,6 +50,9 @@ public class Robot extends TimedRobot {
     RelativeEncoder rightBankEncoder;
     RelativeEncoder leftBankEncoder;
 
+    Encoder leftEncoder = new Encoder(0, 1);
+    
+
     // Timings
     double timeNow;
     double timeStart;
@@ -60,6 +65,8 @@ public class Robot extends TimedRobot {
     // Called when robot is enabled
     @Override
     public void robotInit() {
+        leftEncoder.setDistancePerPulse(1./256.);
+
         System.out.println("Initializing Robot");
         
         driveJoystick = new Joystick(0);
@@ -140,6 +147,8 @@ public class Robot extends TimedRobot {
 
     private void runIMU() {
         double pitch = ahrs.getPitch();
+        double distance = leftEncoder.getDistance();
+        System.out.println("ENCODER DISTANCE:" + distance);
         // System.out.println(ahrs.getVelocityX());
         if (driveJoystick.getTrigger() && Math.abs(pitch) > levelAngle) {
             double speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
