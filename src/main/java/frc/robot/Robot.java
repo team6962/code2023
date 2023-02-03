@@ -1,14 +1,20 @@
 package frc.robot;
-
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.Joystick;
 
 public class Robot extends TimedRobot {
 
     // // Drive Motor Controllers
     PWMSparkMax testMotor;
     double testMotor1Speed=.2;
+    //int encoderHalfDistance = 52442;
+    int encoderHalfDistance = 45000;
+    Joystick joystick;
+    boolean turnStatrted = false;
+    double startDist = 0.0;
+
     // Drive Motor Encoders
     Encoder testEncoder;
 
@@ -16,6 +22,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         System.out.println("Initializing Robot");
+        joystick = new Joystick(0);
         testEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
     }
 
@@ -48,9 +55,26 @@ public class Robot extends TimedRobot {
     // Called periodically in teleoperated mode
     @Override
     public void teleopPeriodic() {
-        testMotor.set(testMotor1Speed);
+
         double dist = testEncoder.getDistance();
-        System.out.println(dist);
+
+        if (joystick.getRawButtonPressed(1) && !turnStatrted){
+            turnStatrted = true;
+            startDist = dist;
+        } 
+        
+        if (turnStatrted){
+            if (dist >= (encoderHalfDistance + startDist)) {
+                testMotor.set(0);
+                turnStatrted = false;
+            } else {
+                testMotor.set(testMotor1Speed);    
+            }
+            System.out.println(dist);
+    
+        }
+        
+        
     }
 
     // Called periodically in test mode
