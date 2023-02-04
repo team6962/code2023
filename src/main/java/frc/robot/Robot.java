@@ -18,8 +18,6 @@ import edu.wpi.first.wpilibj.I2C;
 
 import com.kauailabs.navx.frc.AHRS;
 
-
-
 public class Robot extends TimedRobot {
 
     // Drive Enabled?
@@ -36,7 +34,7 @@ public class Robot extends TimedRobot {
     double twistDeadZone = 0.1;
     double straightDeadZone = 0.2;
 
-    double baseSpeed = 0.1;
+    double baseSpeed = 0.33;
 
     // Auto Balance Parameters
     double levelAngle = 2.5;
@@ -51,7 +49,6 @@ public class Robot extends TimedRobot {
     RelativeEncoder leftBankEncoder;
 
     Encoder leftEncoder = new Encoder(0, 1);
-    
 
     // Timings
     double timeNow;
@@ -65,19 +62,19 @@ public class Robot extends TimedRobot {
     // Called when robot is enabled
     @Override
     public void robotInit() {
-        leftEncoder.setDistancePerPulse(1./256.);
+        leftEncoder.setDistancePerPulse(1. / 256.);
 
         System.out.println("Initializing Robot");
-        
+
         driveJoystick = new Joystick(0);
         utilityJoystick = new Joystick(1);
-        
+
         try {
             ahrs = new AHRS(I2C.Port.kMXP);
         } catch (RuntimeException ex) {
             DriverStation.reportError("Error instantiating navX XMP: " + ex.getMessage(), true);
         }
-        
+
         initMainRobot();
     }
 
@@ -103,7 +100,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         timeStart = System.currentTimeMillis();
-        
+
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
     }
@@ -125,7 +122,7 @@ public class Robot extends TimedRobot {
         leftBank = new PWMSparkMax(0);
         rightBank = new PWMSparkMax(1);
         rightBank.setInverted(true);
-        
+
         // leftBankEncoder = leftBank.getEncoder();
         // rightBankEncoder = rightBank.getEncoder();
 
@@ -157,7 +154,7 @@ public class Robot extends TimedRobot {
             // }
 
             // double velocity = ahrs.getVelocityX();
-            
+
             // // If not moving when trying to...
             // if (Math.abs(velocity) < 0.1) {
             //     balanceSpeed += 0.02;
@@ -168,13 +165,13 @@ public class Robot extends TimedRobot {
             // double speed = (balanceSpeed + baseSpeed) * Math.signum(pitch);
 
             // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
-            
+
             System.out.println(speed);
 
             drive.tankDrive(speed, speed);
             return;
         } else {
-            teleopDrive(); 
+            teleopDrive();
             return;
         }
     }
@@ -183,13 +180,13 @@ public class Robot extends TimedRobot {
     private void teleopDrive() {
         double axisStraight = driveJoystick.getRawAxis(1);
         double axisTwist = driveJoystick.getRawAxis(2);
-        
+
         double speedStraight = mapSpeed(axisStraight, baseSpeed, straightLimit, straightDeadZone);
         double speedTwist = mapSpeed(axisTwist, 0, twistLimit, twistDeadZone);
 
         double rawLeftBankSpeed = speedStraight - speedTwist;
         double rawRightBankSpeed = speedStraight + speedTwist;
-        
+
         double leftSign = Math.signum(rawLeftBankSpeed);
         double absLeftBank = Math.abs(rawLeftBankSpeed);
 
@@ -205,7 +202,7 @@ public class Robot extends TimedRobot {
             absLeftBank -= absRightBank - straightLimit;
             absRightBank = straightLimit;
         }
-        
+
         drive.tankDrive((absLeftBank * leftSign), (absRightBank * rightSign));
     }
 
@@ -216,7 +213,7 @@ public class Robot extends TimedRobot {
         return value;
     }
 
-    private double mapSpeed(double speed, double min, double max, double deadZone) {        
+    private double mapSpeed(double speed, double min, double max, double deadZone) {
         double sign = Math.signum(speed);
         double absSpeed = Math.abs(speed);
 
