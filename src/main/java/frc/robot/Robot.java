@@ -227,4 +227,19 @@ public class Robot extends TimedRobot {
     private double mapNumber(double x, double a, double b, double c, double d) {
         return (x - a) / (b - a) * (d - c) + c;
     }
+
+    private void encoderDrive(DifferentialDrive drive, double leftSpeed, double rightSpeed, double leftPulsesPerTick,
+            double rightPulsesPerTick) {
+
+        double encoderRatio = leftPulsesPerTick / rightPulsesPerTick;
+        double expectedRatio = leftSpeed / rightSpeed;
+
+        if (Math.abs(encoderRatio / expectedRatio) < 1) {
+            rightSpeed *= Math.abs(encoderRatio / expectedRatio);
+        } else {
+            leftSpeed /= Math.abs(encoderRatio / expectedRatio);
+        }
+
+        drive.tankDrive(leftSpeed, rightSpeed);
+    }
 }
