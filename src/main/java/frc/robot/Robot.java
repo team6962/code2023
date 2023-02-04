@@ -62,7 +62,6 @@ public class Robot extends TimedRobot {
 
 
     Encoder leftEncoder = new Encoder(0, 1);
-    
 
     // Timings
     double timeNow;
@@ -76,19 +75,19 @@ public class Robot extends TimedRobot {
     // Called when robot is enabled
     @Override
     public void robotInit() {
-        leftEncoder.setDistancePerPulse(1./256.);
+        leftEncoder.setDistancePerPulse(1. / 256.);
 
         System.out.println("Initializing Robot");
-        
+
         driveJoystick = new Joystick(0);
         utilityJoystick = new Joystick(1);
-        
+
         try {
             ahrs = new AHRS(I2C.Port.kMXP);
         } catch (RuntimeException ex) {
             DriverStation.reportError("Error instantiating navX XMP: " + ex.getMessage(), true);
         }
-        
+
         initMainRobot();
     }
 
@@ -147,7 +146,7 @@ public class Robot extends TimedRobot {
         leftBank = new PWMSparkMax(0);
         rightBank = new PWMSparkMax(1);
         rightBank.setInverted(true);
-        
+
         // leftBankEncoder = leftBank.getEncoder();
         // rightBankEncoder = rightBank.getEncoder();
 
@@ -215,7 +214,7 @@ public class Robot extends TimedRobot {
             // }
 
             // double velocity = ahrs.getVelocityX();
-            
+
             // // If not moving when trying to...
             // if (Math.abs(velocity) < 0.1) {
             //     balanceSpeed += 0.02;
@@ -235,7 +234,7 @@ public class Robot extends TimedRobot {
             }
             return;
         } else {
-            teleopDrive(); 
+            teleopDrive();
             return;
         }
     }
@@ -244,13 +243,13 @@ public class Robot extends TimedRobot {
     private void teleopDrive() {
         double axisStraight = driveJoystick.getRawAxis(1);
         double axisTwist = driveJoystick.getRawAxis(2);
-        
+
         double speedStraight = mapSpeed(axisStraight, baseSpeed, straightLimit, straightDeadZone);
         double speedTwist = mapSpeed(axisTwist, 0, twistLimit, twistDeadZone);
 
         double rawLeftBankSpeed = speedStraight - speedTwist;
         double rawRightBankSpeed = speedStraight + speedTwist;
-        
+
         double leftSign = Math.signum(rawLeftBankSpeed);
         double absLeftBank = Math.abs(rawLeftBankSpeed);
 
@@ -266,7 +265,7 @@ public class Robot extends TimedRobot {
             absLeftBank -= absRightBank - straightLimit;
             absRightBank = straightLimit;
         }
-        
+
         drive.tankDrive((absLeftBank * leftSign), (absRightBank * rightSign));
     }
 
@@ -277,7 +276,7 @@ public class Robot extends TimedRobot {
         return value;
     }
 
-    private double mapSpeed(double speed, double min, double max, double deadZone) {        
+    private double mapSpeed(double speed, double min, double max, double deadZone) {
         double sign = Math.signum(speed);
         double absSpeed = Math.abs(speed);
 
@@ -290,5 +289,20 @@ public class Robot extends TimedRobot {
 
     private double mapNumber(double x, double a, double b, double c, double d) {
         return (x - a) / (b - a) * (d - c) + c;
+    }
+
+    private void encoderDrive(DifferentialDrive drive, double leftSpeed, double rightSpeed, double leftPulsesPerTick,
+            double rightPulsesPerTick) {
+
+        double encoderRatio = leftPulsesPerTick / rightPulsesPerTick;
+        double expectedRatio = leftSpeed / rightSpeed;
+
+        if (Math.abs(encoderRatio / expectedRatio) < 1) {
+            rightSpeed *= Math.abs(encoderRatio / expectedRatio);
+        } else {
+            leftSpeed /= Math.abs(encoderRatio / expectedRatio);
+        }
+
+        drive.tankDrive(leftSpeed, rightSpeed);
     }
 }
