@@ -17,8 +17,9 @@ import edu.wpi.first.wpilibj.I2C;
 //import edu.wpi.first.wpilibj.SPI;
 
 import com.kauailabs.navx.frc.AHRS;
-
-
+import java.util.TimerTask;
+import java.util.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
 
@@ -30,16 +31,17 @@ public class Robot extends TimedRobot {
     Joystick utilityJoystick;
 
     // Drive speed limits
-    double straightLimit = 0.6;
+    double straightLimit = 0.8;
     double twistLimit = 0.6;
 
     double twistDeadZone = 0.1;
     double straightDeadZone = 0.2;
 
-    double baseSpeed = 0.1;
+    double baseSpeed = 0.4;
 
     // Auto Balance Parameters
     double levelAngle = 2.5;
+    double maxCSDist = 5.0; 
 
     // Drive Motor Controllers
     PWMSparkMax rightBank;
@@ -49,6 +51,15 @@ public class Robot extends TimedRobot {
     // Drive Motor Encoders
     RelativeEncoder rightBankEncoder;
     RelativeEncoder leftBankEncoder;
+
+    // Collision Detection 
+    double last_world_linear_accel_x = 0.0f;
+    double last_world_linear_accel_y = 0.0f;
+    boolean collisionDetected = false;
+    boolean posInit = false;
+    final static double kCollisionThreshold_DeltaG = 0.5f;
+    Timer timer = new Timer();
+
 
     Encoder leftEncoder = new Encoder(0, 1);
     
@@ -103,9 +114,20 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
         timeStart = System.currentTimeMillis();
+
+        collisionDetected = false;
+        posInit = false;
         
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runDiagnostics();
+            }
+    
+        }, 0, 50);
     }
 
     // Called periodically in teleoperated mode
@@ -144,14 +166,50 @@ public class Robot extends TimedRobot {
         // teleopDrive();
         runIMU();
     }
+    private void runDiagnostics() {
+
+
+        
+        //initialize vars
+        double curr_world_linear_accel_x = ahrs.getWorldLinearAccelX();
+        double currentJerkX = curr_world_linear_accel_x - last_world_linear_accel_x;
+        last_world_linear_accel_x = curr_world_linear_accel_x;
+        double curr_world_linear_accel_y = ahrs.getWorldLinearAccelY();
+        double currentJerkY = curr_world_linear_accel_y - last_world_linear_accel_y;
+        last_world_linear_accel_y = curr_world_linear_accel_y;
+
+        if ( ( Math.abs(currentJerkX) > kCollisionThreshold_DeltaG ) ||
+               ( Math.abs(currentJerkY) > kCollisionThreshold_DeltaG) ) {
+              collisionDetected = true;
+        }
+        
+        SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
+
+
+    }
 
     private void runIMU() {
+        
+        
         double pitch = ahrs.getPitch();
         double distance = leftEncoder.getDistance();
         System.out.println("ENCODER DISTANCE:" + distance);
+        SmartDashboard.putNumber( "encoderDistance", distance);
+        SmartDashboard.putBoolean(  "posInit", posInit);
+
+        if (driveJoystick.getRawButtonPressed(11)) {
+            leftEncoder.reset();
+            posInit = false;
+        }
+        
         // System.out.println(ahrs.getVelocityX());
         if (driveJoystick.getTrigger() && Math.abs(pitch) > levelAngle) {
             double speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
+            
+            if (!posInit) {
+                posInit = true;
+                leftEncoder.reset();
+            }
             // if (Math.abs(pitch) < levelAngle) {
             //     balanceSpeed = 0.0;
             // }
@@ -169,9 +227,12 @@ public class Robot extends TimedRobot {
 
             // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
             
+            
             System.out.println(speed);
 
-            drive.tankDrive(speed, speed);
+            if (posInit && Math.abs(distance) < maxCSDist)   {
+                drive.tankDrive(speed, speed);
+            }
             return;
         } else {
             teleopDrive(); 
