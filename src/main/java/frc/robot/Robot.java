@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
     double last_world_linear_accel_x = 0.0f;
     double last_world_linear_accel_y = 0.0f;
     boolean collisionDetected = false;
-    boolean posInit = false;
+    boolean balanced = false;
     final static double kCollisionThreshold_DeltaG = 0.5f;
     Timer timer = new Timer();
 
@@ -115,7 +115,6 @@ public class Robot extends TimedRobot {
         timeStart = System.currentTimeMillis();
 
         collisionDetected = false;
-        posInit = false;
         
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
@@ -182,7 +181,7 @@ public class Robot extends TimedRobot {
               collisionDetected = true;
         }
         
-        SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
+        //SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
 
 
     }
@@ -194,19 +193,29 @@ public class Robot extends TimedRobot {
         double distance = leftEncoder.getDistance();
         System.out.println("ENCODER DISTANCE:" + distance);
         SmartDashboard.putNumber( "encoderDistance", distance);
-        SmartDashboard.putBoolean(  "posInit", posInit);
+        SmartDashboard.putBoolean( "balanced", balanced);
 
-        if (driveJoystick.getRawButtonPressed(11)) {
+        if (driveJoystick.getRawButtonPressed(2)) {
             leftEncoder.reset();
-            posInit = false;
+            balanced = false;
         }
         
         // System.out.println(ahrs.getVelocityX());
-        if (driveJoystick.getTrigger() && Math.abs(pitch) > levelAngle) {
-            double speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
-            
-            if (!posInit) {
-                posInit = true;
+        if (driveJoystick.getTrigger()) {
+
+            if (Math.abs(pitch) > levelAngle) {
+                SmartDashboard.putBoolean( "angled", true);
+                double speed = 0;
+                if (!balanced && ((-0.5 < leftEncoder.getDistance() && leftEncoder.getDistance() < 0.6))) {
+                    speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
+                }
+                System.out.println(speed);
+                balanced = false;
+                drive.tankDrive(speed, speed);
+                
+            } else {
+                SmartDashboard.putBoolean( "angled", false);
+                balanced = true;
                 leftEncoder.reset();
             }
             // if (Math.abs(pitch) < levelAngle) {
@@ -227,11 +236,7 @@ public class Robot extends TimedRobot {
             // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
             
             
-            System.out.println(speed);
-
-            if (posInit && Math.abs(distance) < maxCSDist)   {
-                drive.tankDrive(speed, speed);
-            }
+            
             return;
         } else {
             teleopDrive();
