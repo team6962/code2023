@@ -41,7 +41,7 @@ public class Robot extends TimedRobot {
 
     // Auto Balance Parameters
     double levelAngle = 2.5;
-    double maxCSDist = 5.0; 
+    double maxCSDist = 5.0;
 
     // Drive Motor Controllers
     PWMSparkMax rightBank;
@@ -49,8 +49,8 @@ public class Robot extends TimedRobot {
     DifferentialDrive drive;
 
     // Drive Motor Encoders
-    RelativeEncoder rightBankEncoder;
-    RelativeEncoder leftBankEncoder;
+    Encoder rightBankEncoder;
+    Encoder leftBankEncoder;
 
     // Collision Detection 
     double last_world_linear_accel_x = 0.0f;
@@ -59,9 +59,6 @@ public class Robot extends TimedRobot {
     boolean balanced = false;
     final static double kCollisionThreshold_DeltaG = 0.5f;
     Timer timer = new Timer();
-
-
-    Encoder leftEncoder = new Encoder(0, 1);
 
     // Timings
     double timeNow;
@@ -75,9 +72,19 @@ public class Robot extends TimedRobot {
     // Called when robot is enabled
     @Override
     public void robotInit() {
-        leftEncoder.setDistancePerPulse(1. / 256.);
-
         System.out.println("Initializing Robot");
+
+        leftBank = new PWMSparkMax(0);
+        rightBank = new PWMSparkMax(1);
+        rightBank.setInverted(true);
+
+        leftBankEncoder = new Encoder(0, 1);
+        rightBankEncoder = new Encoder(2, 3);
+
+        drive = new DifferentialDrive(leftBank, rightBank);
+
+        leftBankEncoder.setDistancePerPulse(1. / 256.);
+        rightBankEncoder.setDistancePerPulse(1. / 256.);
 
         driveJoystick = new Joystick(0);
         utilityJoystick = new Joystick(1);
@@ -88,7 +95,6 @@ public class Robot extends TimedRobot {
             DriverStation.reportError("Error instantiating navX XMP: " + ex.getMessage(), true);
         }
 
-        initMainRobot();
     }
 
     // Called periodically when robot is enabled
@@ -115,7 +121,7 @@ public class Robot extends TimedRobot {
         timeStart = System.currentTimeMillis();
 
         collisionDetected = false;
-        
+
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
 
@@ -124,7 +130,7 @@ public class Robot extends TimedRobot {
             public void run() {
                 runDiagnostics();
             }
-    
+
         }, 0, 50);
     }
 
@@ -140,18 +146,6 @@ public class Robot extends TimedRobot {
 
     }
 
-    // Initializes main robot
-    private void initMainRobot() {
-        leftBank = new PWMSparkMax(0);
-        rightBank = new PWMSparkMax(1);
-        rightBank.setInverted(true);
-
-        // leftBankEncoder = leftBank.getEncoder();
-        // rightBankEncoder = rightBank.getEncoder();
-
-        drive = new DifferentialDrive(leftBank, rightBank);
-    }
-
     // Runs periodically when driving
     private void runDrive() {
         if (!enableDrive) {
@@ -164,10 +158,9 @@ public class Robot extends TimedRobot {
         // teleopDrive();
         runIMU();
     }
+
     private void runDiagnostics() {
 
-
-        
         //initialize vars
         double curr_world_linear_accel_x = ahrs.getWorldLinearAccelX();
         double currentJerkX = curr_world_linear_accel_x - last_world_linear_accel_x;
@@ -176,47 +169,45 @@ public class Robot extends TimedRobot {
         double currentJerkY = curr_world_linear_accel_y - last_world_linear_accel_y;
         last_world_linear_accel_y = curr_world_linear_accel_y;
 
-        if ( ( Math.abs(currentJerkX) > kCollisionThreshold_DeltaG ) ||
-               ( Math.abs(currentJerkY) > kCollisionThreshold_DeltaG) ) {
-              collisionDetected = true;
+        if ((Math.abs(currentJerkX) > kCollisionThreshold_DeltaG) ||
+                (Math.abs(currentJerkY) > kCollisionThreshold_DeltaG)) {
+            collisionDetected = true;
         }
-        
-        //SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
 
+        //SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
 
     }
 
     private void runIMU() {
-        
-        
+
         double pitch = ahrs.getPitch();
-        double distance = leftEncoder.getDistance();
+        double distance = leftBankEncoder.getDistance();
         System.out.println("ENCODER DISTANCE:" + distance);
-        SmartDashboard.putNumber( "encoderDistance", distance);
-        SmartDashboard.putBoolean( "balanced", balanced);
+        SmartDashboard.putNumber("encoderDistance", distance);
+        SmartDashboard.putBoolean("balanced", balanced);
 
         if (driveJoystick.getRawButtonPressed(2)) {
-            leftEncoder.reset();
+            leftBankEncoder.reset();
             balanced = false;
         }
-        
+
         // System.out.println(ahrs.getVelocityX());
         if (driveJoystick.getTrigger()) {
 
             if (Math.abs(pitch) > levelAngle) {
-                SmartDashboard.putBoolean( "angled", true);
+                SmartDashboard.putBoolean("angled", true);
                 double speed = 0;
-                if (!balanced && ((-0.5 < leftEncoder.getDistance() && leftEncoder.getDistance() < 0.6))) {
+                if (!balanced && ((-0.5 < leftBankEncoder.getDistance() && leftBankEncoder.getDistance() < 0.6))) {
                     speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
                 }
                 System.out.println(speed);
                 balanced = false;
                 drive.tankDrive(speed, speed);
-                
+
             } else {
-                SmartDashboard.putBoolean( "angled", false);
+                SmartDashboard.putBoolean("angled", false);
                 balanced = true;
-                leftEncoder.reset();
+                leftBankEncoder.reset();
             }
             // if (Math.abs(pitch) < levelAngle) {
             //     balanceSpeed = 0.0;
@@ -234,9 +225,7 @@ public class Robot extends TimedRobot {
             // double speed = (balanceSpeed + baseSpeed) * Math.signum(pitch);
 
             // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
-            
-            
-            
+
             return;
         } else {
             teleopDrive();
