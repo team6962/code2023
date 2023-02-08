@@ -51,6 +51,8 @@ public class Robot extends TimedRobot {
     // Drive Motor Encoders
     Encoder rightBankEncoder;
     Encoder leftBankEncoder;
+    double deltaRightEncoder = 0.0;
+    double deltaLeftEncoder = 0.0;
 
     // Collision Detection 
     double last_world_linear_accel_x = 0.0f;
@@ -100,7 +102,16 @@ public class Robot extends TimedRobot {
     // Called periodically when robot is enabled
     @Override
     public void robotPeriodic() {
+        deltaRightEncoder = rightBankEncoder.getDistance() - deltaRightEncoder;
+        deltaLeftEncoder = leftBankEncoder.getDistance() - deltaLeftEncoder;
 
+        if (rightBankEncoder.getDistance() == 0) {
+            deltaRightEncoder = 0.0;
+        }
+
+        if (leftBankEncoder.getDistance() == 0) {
+            deltaLeftEncoder = 0.0;
+        }
     }
 
     // Called when autonomous mode is enabled
@@ -154,6 +165,9 @@ public class Robot extends TimedRobot {
             drive.tankDrive(0.0, 0.0);
             return;
         }
+
+        System.out.println(deltaRightEncoder);
+        System.out.println(deltaLeftEncoder);
 
         // teleopDrive();
         runIMU();
