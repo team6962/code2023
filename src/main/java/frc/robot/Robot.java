@@ -46,6 +46,10 @@ public class Robot extends TimedRobot {
     // Drive Motor Controllers
     PWMSparkMax rightBank;
     PWMSparkMax leftBank;
+
+    double rightBankEfficiency = 1.0;
+    double leftBankEfficiency = 1.0;
+
     DifferentialDrive drive;
 
     // Drive Motor Encoders
@@ -68,6 +72,9 @@ public class Robot extends TimedRobot {
     AHRS ahrs;
 
     double balanceSpeed = 0;
+
+    boolean calibratingSpeed = false;
+    double calibratingTicks = 0.0;
 
     // Called when robot is enabled
     @Override
@@ -136,17 +143,6 @@ public class Robot extends TimedRobot {
     // Called periodically in teleoperated mode
     @Override
     public void teleopPeriodic() {
-        runDrive();
-    }
-
-    // Called periodically in test mode
-    @Override
-    public void testPeriodic() {
-
-    }
-
-    // Runs periodically when driving
-    private void runDrive() {
         if (!enableDrive) {
             System.out.println("Drive Disabled");
 
@@ -154,30 +150,18 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        System.out.println(rightBankEncoder.getRate());
-        System.out.println(leftBankEncoder.getRate());
-
         // teleopDrive();
         runIMU();
     }
 
-    private void runDiagnostics() {
-
-        //initialize vars
-        double curr_world_linear_accel_x = ahrs.getWorldLinearAccelX();
-        double currentJerkX = curr_world_linear_accel_x - last_world_linear_accel_x;
-        last_world_linear_accel_x = curr_world_linear_accel_x;
-        double curr_world_linear_accel_y = ahrs.getWorldLinearAccelY();
-        double currentJerkY = curr_world_linear_accel_y - last_world_linear_accel_y;
-        last_world_linear_accel_y = curr_world_linear_accel_y;
-
-        if ((Math.abs(currentJerkX) > kCollisionThreshold_DeltaG) ||
-                (Math.abs(currentJerkY) > kCollisionThreshold_DeltaG)) {
-            collisionDetected = true;
+    // Called periodically in test mode
+    @Override
+    public void testPeriodic() {
+        if (calibratingSpeed) {
+            calibrateSpeed();
+        } else if (driveJoystick.getTrigger()) {
+            calibrateSpeedInit();
         }
-
-        //SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
-
     }
 
     private void runIMU() {
@@ -262,14 +246,20 @@ public class Robot extends TimedRobot {
             absRightBank = straightLimit;
         }
 
-        drive.tankDrive((absLeftBank * leftSign), (absRightBank * rightSign));
-    }
+        if (driveJoystick.getRawButton(8) && (absLeftBank * leftSign) == (absRightBank * rightSign)) {
+            double encoderRatio = leftBankEncoder.getRate() / rightBankEncoder.getRate();
 
-    // Resets encoder value and returns position
-    private double resetEncoderValue(RelativeEncoder encoder) {
-        double value = encoder.getPosition();
-        encoder.setPosition(0);
-        return value;
+            if (Math.abs(encoderRatio) < 1) {
+                System.out.println("rightBankEfficiency: " + String.valueOf(encoderRatio));
+                System.out.println("leftBankEfficiency: 1.0");
+            } else {
+                System.out.println("rightBankEfficiency: 1.0");
+                System.out.println("leftBankEfficiency: " + String.valueOf(1 / encoderRatio));
+            }
+        }
+
+        drive.tankDrive((absLeftBank * leftSign) * leftBankEfficiency,
+                (absRightBank * rightSign) * rightBankEfficiency);
     }
 
     private double mapSpeed(double speed, double min, double max, double deadZone) {
@@ -287,18 +277,46 @@ public class Robot extends TimedRobot {
         return (x - a) / (b - a) * (d - c) + c;
     }
 
-    private void encoderDrive(DifferentialDrive drive, double leftSpeed, double rightSpeed, Encoder leftEncoder,
-            Encoder rightEncoder) {
+    private void runDiagnostics() {
 
-        double encoderRatio = leftEncoder.getRate() / rightEncoder.getRate();
-        double expectedRatio = leftSpeed / rightSpeed;
+        // initialize vars
+        double curr_world_linear_accel_x = ahrs.getWorldLinearAccelX();
+        double currentJerkX = curr_world_linear_accel_x - last_world_linear_accel_x;
+        last_world_linear_accel_x = curr_world_linear_accel_x;
+        double curr_world_linear_accel_y = ahrs.getWorldLinearAccelY();
+        double currentJerkY = curr_world_linear_accel_y - last_world_linear_accel_y;
+        last_world_linear_accel_y = curr_world_linear_accel_y;
 
-        if (Math.abs(encoderRatio / expectedRatio) < 1) {
-            rightSpeed *= Math.abs(encoderRatio / expectedRatio);
-        } else {
-            leftSpeed /= Math.abs(encoderRatio / expectedRatio);
+        if ((Math.abs(currentJerkX) > kCollisionThreshold_DeltaG) ||
+                (Math.abs(currentJerkY) > kCollisionThreshold_DeltaG)) {
+            collisionDetected = true;
         }
 
-        drive.tankDrive(leftSpeed, rightSpeed);
+        // SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
+
+    }
+
+    private void calibrateSpeedInit() {
+        System.out.println("Calibrating Speed...");
+        calibratingSpeed = true;
+        calibratingTicks = 0.0;
+    }
+
+    private void calibrateSpeed() {
+        drive.tankDrive(calibratingTicks / 100, calibratingTicks / 100);
+        System.out.println("Testing speed of " + String.valueOf(calibratingTicks / 100));
+
+        if (leftBankEncoder.getRate() * rightBankEncoder.getRate() != 0) {
+
+            baseSpeed = calibratingTicks / 100;
+            System.out.println("Done!");
+            System.out.println("Set baseSpeed to: " + String.valueOf(baseSpeed));
+
+            calibratingSpeed = false;
+            calibratingTicks = 0.0;
+            return;
+        }
+
+        calibratingTicks++;
     }
 }
