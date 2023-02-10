@@ -171,9 +171,11 @@ public class Robot extends TimedRobot {
         System.out.println("ENCODER DISTANCE:" + distance);
         SmartDashboard.putNumber("encoderDistance", distance);
         SmartDashboard.putBoolean("balanced", balanced);
+        SmartDashboard.putNumber("yaw", ahrs.getYaw());
 
         if (driveJoystick.getRawButtonPressed(2)) {
             leftBankEncoder.reset();
+            ahrs.reset();
             balanced = false;
         }
 
@@ -183,17 +185,27 @@ public class Robot extends TimedRobot {
             if (Math.abs(pitch) > levelAngle) {
                 SmartDashboard.putBoolean("angled", true);
                 double speed = 0;
-                if (!balanced && ((-0.5 < leftBankEncoder.getDistance() && leftBankEncoder.getDistance() < 0.6))) {
+                if (!balanced) {
                     speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
                 }
                 System.out.println(speed);
                 balanced = false;
                 drive.tankDrive(speed, speed);
+                SmartDashboard.putString("driveMode", "it costs zero dollars to turn the robot");
+               
+
+                
 
             } else {
                 SmartDashboard.putBoolean("angled", false);
                 balanced = true;
                 leftBankEncoder.reset();
+            }
+
+            if (balanced && ahrs.getYaw() > -90 && ahrs.getYaw() < 90) {
+                    
+                    drive.tankDrive(-0.5, 0.5);
+                    SmartDashboard.putString("driveMode", "yes");
             }
             // if (Math.abs(pitch) < levelAngle) {
             //     balanceSpeed = 0.0;
