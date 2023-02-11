@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 //import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 //import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.I2C;
@@ -22,7 +23,6 @@ import java.util.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends TimedRobot {
-
     // Drive Enabled?
     private boolean enableDrive = true;
 
@@ -44,8 +44,8 @@ public class Robot extends TimedRobot {
     double maxCSDist = 5.0;
 
     // Drive Motor Controllers
-    PWMSparkMax rightBank;
-    PWMSparkMax leftBank;
+    MotorControllerGroup rightBank;
+    MotorControllerGroup leftBank;
 
     double rightBankEfficiency = 1.0;
     double leftBankEfficiency = 1.0;
@@ -53,8 +53,8 @@ public class Robot extends TimedRobot {
     DifferentialDrive drive;
 
     // Drive Motor Encoders
-    Encoder rightBankEncoder;
-    Encoder leftBankEncoder;
+    RelativeEncoder rightBankEncoder;
+    RelativeEncoder leftBankEncoder;
 
     // Collision Detection 
     double last_world_linear_accel_x = 0.0f;
@@ -81,17 +81,19 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         System.out.println("Initializing Robot");
 
-        leftBank = new PWMSparkMax(0);
-        rightBank = new PWMSparkMax(1);
+        CANSparkMax left1 = new CANSparkMax(1, MotorType.kBrushless);
+        CANSparkMax left2 = new CANSparkMax(2, MotorType.kBrushless);
+        CANSparkMax right1 = new CANSparkMax(3, MotorType.kBrushless);
+        CANSparkMax right2 = new CANSparkMax(4, MotorType.kBrushless);
+
+        leftBank = new MotorControllerGroup(left1, left2);
+        rightBank = new MotorControllerGroup(right1, right2);
         rightBank.setInverted(true);
 
-        leftBankEncoder = new Encoder(0, 1);
-        rightBankEncoder = new Encoder(2, 3);
+        leftBankEncoder = left1.getEncoder();
+        rightBankEncoder = right1.getEncoder();
 
         drive = new DifferentialDrive(leftBank, rightBank);
-
-        leftBankEncoder.setDistancePerPulse(1. / 256.);
-        rightBankEncoder.setDistancePerPulse(1. / 256.);
 
         driveJoystick = new Joystick(0);
         utilityJoystick = new Joystick(1);
@@ -167,14 +169,14 @@ public class Robot extends TimedRobot {
     private void runIMU() {
 
         double pitch = ahrs.getPitch();
-        double distance = leftBankEncoder.getDistance();
+        double distance = leftBankEncoder.getPosition();
         System.out.println("ENCODER DISTANCE:" + distance);
         SmartDashboard.putNumber("encoderDistance", distance);
         SmartDashboard.putBoolean("balanced", balanced);
         SmartDashboard.putNumber("yaw", ahrs.getYaw());
 
         if (driveJoystick.getRawButtonPressed(2)) {
-            leftBankEncoder.reset();
+            leftBankEncoder.setPosition(0);
             ahrs.reset();
             balanced = false;
         }
@@ -192,20 +194,17 @@ public class Robot extends TimedRobot {
                 balanced = false;
                 drive.tankDrive(speed, speed);
                 SmartDashboard.putString("driveMode", "it costs zero dollars to turn the robot");
-               
-
-                
 
             } else {
                 SmartDashboard.putBoolean("angled", false);
                 balanced = true;
-                leftBankEncoder.reset();
+                leftBankEncoder.setPosition(0);
             }
 
             if (balanced && ahrs.getYaw() > -90 && ahrs.getYaw() < 90) {
-                    
-                    drive.tankDrive(-0.5, 0.5);
-                    SmartDashboard.putString("driveMode", "yes");
+
+                drive.tankDrive(-0.5, 0.5);
+                SmartDashboard.putString("driveMode", "yes");
             }
             // if (Math.abs(pitch) < levelAngle) {
             //     balanceSpeed = 0.0;
@@ -259,7 +258,7 @@ public class Robot extends TimedRobot {
         }
 
         if (driveJoystick.getRawButton(8) && (absLeftBank * leftSign) == (absRightBank * rightSign)) {
-            double encoderRatio = leftBankEncoder.getRate() / rightBankEncoder.getRate();
+            double encoderRatio = leftBankEncoder.getVelocity() / rightBankEncoder.getVelocity();
 
             if (Math.abs(encoderRatio) < 1) {
                 System.out.println("rightBankEfficiency: " + String.valueOf(encoderRatio));
@@ -318,7 +317,7 @@ public class Robot extends TimedRobot {
         drive.tankDrive(calibratingTicks / 100, calibratingTicks / 100);
         System.out.println("Testing speed of " + String.valueOf(calibratingTicks / 100));
 
-        if (leftBankEncoder.getRate() * rightBankEncoder.getRate() != 0) {
+        if (leftBankEncoder.getVelocity() * rightBankEncoder.getVelocity() != 0) {
 
             baseSpeed = calibratingTicks / 100;
             System.out.println("Done!");
