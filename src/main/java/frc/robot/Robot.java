@@ -31,13 +31,13 @@ public class Robot extends TimedRobot {
     Joystick utilityJoystick;
 
     // Drive speed limits
-    double straightLimit = 0.8;
-    double twistLimit = 0.6;
+    double straightLimit = 0.4;
+    double twistLimit = 0.4;
 
-    double twistDeadZone = 0.1;
-    double straightDeadZone = 0.2;
+    double twistDeadZone = 0.2;
+    double straightDeadZone = 0.1;
 
-    double baseSpeed = 0.4;
+    double baseSpeed = 0;
 
     // Auto Balance Parameters
     double levelAngle = 2.5;
@@ -88,7 +88,7 @@ public class Robot extends TimedRobot {
 
         leftBank = new MotorControllerGroup(left1, left2);
         rightBank = new MotorControllerGroup(right1, right2);
-        rightBank.setInverted(true);
+        leftBank.setInverted(true);
 
         leftBankEncoder = left1.getEncoder();
         rightBankEncoder = right1.getEncoder();
@@ -188,7 +188,7 @@ public class Robot extends TimedRobot {
                 SmartDashboard.putBoolean("angled", true);
                 double speed = 0;
                 if (!balanced) {
-                    speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
+                    speed = (pitch / 180) + ((baseSpeed + 0.25) * Math.signum(pitch));
                 }
                 System.out.println(speed);
                 balanced = false;
@@ -201,11 +201,11 @@ public class Robot extends TimedRobot {
                 leftBankEncoder.setPosition(0);
             }
 
-            if (balanced && ahrs.getYaw() > -90 && ahrs.getYaw() < 90) {
+            // if (balanced && ahrs.getYaw() > -90 && ahrs.getYaw() < 90) {
 
-                drive.tankDrive(-0.5, 0.5);
-                SmartDashboard.putString("driveMode", "yes");
-            }
+            //     drive.tankDrive(-0.5, 0.5);
+            //     SmartDashboard.putString("driveMode", "yes");
+            // }
             // if (Math.abs(pitch) < levelAngle) {
             //     balanceSpeed = 0.0;
             // }
