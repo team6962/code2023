@@ -1,8 +1,8 @@
 package frc.robot;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+// import com.revrobotics.CANSparkMax;
+// import com.revrobotics.RelativeEncoder;
+// import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
@@ -168,7 +168,6 @@ public class Robot extends TimedRobot {
 
         double pitch = ahrs.getPitch();
         double distance = leftBankEncoder.getDistance();
-        System.out.println("ENCODER DISTANCE:" + distance);
         SmartDashboard.putNumber("encoderDistance", distance);
         SmartDashboard.putBoolean("balanced", balanced);
         SmartDashboard.putNumber("yaw", ahrs.getYaw());
@@ -183,21 +182,14 @@ public class Robot extends TimedRobot {
         if (driveJoystick.getTrigger()) {
 
             if (Math.abs(pitch) > levelAngle) {
-                SmartDashboard.putBoolean("angled", true);
                 double speed = 0;
-                if (!balanced) {
-                    speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
-                }
-                System.out.println(speed);
+                speed = (pitch / 90) + ((baseSpeed + 0.02) * Math.signum(pitch));
+                SmartDashboard.putNumber("speed", speed);
                 balanced = false;
                 drive.tankDrive(speed, speed);
                 SmartDashboard.putString("driveMode", "it costs zero dollars to turn the robot");
-               
-
-                
 
             } else {
-                SmartDashboard.putBoolean("angled", false);
                 balanced = true;
                 leftBankEncoder.reset();
             }
