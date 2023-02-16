@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -85,6 +86,11 @@ public class Robot extends TimedRobot {
         CANSparkMax left2 = new CANSparkMax(2, MotorType.kBrushless);
         CANSparkMax right1 = new CANSparkMax(3, MotorType.kBrushless);
         CANSparkMax right2 = new CANSparkMax(4, MotorType.kBrushless);
+
+        left1.setIdleMode(IdleMode.kBrake);
+        left2.setIdleMode(IdleMode.kBrake);
+        right1.setIdleMode(IdleMode.kBrake);
+        right2.setIdleMode(IdleMode.kBrake);
 
         leftBank = new MotorControllerGroup(left1, left2);
         rightBank = new MotorControllerGroup(right1, right2);
