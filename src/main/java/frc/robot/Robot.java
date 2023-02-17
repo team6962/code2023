@@ -73,7 +73,7 @@ public class Robot extends TimedRobot {
 
     //Arm motor power levels
     double telescopingPower = 0.5;
-    double rotatingPower = 0.7;
+    double rotatingPower = 0.5;
 
     //Joystick Buttons
     int telescopingButton = 4;
@@ -194,10 +194,10 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        runTelescoping();
+        //runTelescoping();
         runRotating();
         // teleopDrive();
-        runIMU();
+        //runIMU();
     }
 
     // Called periodically in test mode
@@ -220,7 +220,7 @@ public class Robot extends TimedRobot {
 
 
     private void runRotating(){
-        double power = utilityJoystick.getRawAxis(2);
+        double power = mapSpeed(utilityJoystick.getRawAxis(1), 0, 1, straightDeadZone);
         double leftPower = power;
         double rightPower = -power; 
         double leftRotatingMotorVel = leftRotatingEncoder.getVelocity();
