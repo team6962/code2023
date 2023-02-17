@@ -60,11 +60,14 @@ public class Robot extends TimedRobot {
 
     //Arm Motors
     CANSparkMax telescopingMotor;
-    CANSparkMax rotatingMotor;
+    CANSparkMax leftRotatingMotor;
+    CANSparkMax rightRotatingMotor;
     
     //Arm Motor Encoders + Limits
     RelativeEncoder telescopingEncoder;
-    RelativeEncoder rotatingEncoder;
+    RelativeEncoder leftRotatingEncoder;
+    RelativeEncoder rightRotatingEncoder;
+
     double telescopingLimit = 0; //CHANGE
     double rotatingLimit = 0; //CHANGE
 
@@ -125,10 +128,14 @@ public class Robot extends TimedRobot {
         drive = new DifferentialDrive(leftBank, rightBank);
 
         telescopingMotor = new CANSparkMax(5, MotorType.kBrushless);
-        rotatingMotor = new CANSparkMax(6, MotorType.kBrushless);
+        leftRotatingMotor = new CANSparkMax(6, MotorType.kBrushless);
+        rightRotatingMotor = new CANSparkMax(7, MotorType.kBrushless);
+
 
         telescopingEncoder = telescopingMotor.getEncoder();
-        rotatingEncoder = rotatingMotor.getEncoder();
+        leftRotatingEncoder = leftRotatingMotor.getEncoder();
+        rightRotatingEncoder = rightRotatingMotor.getEncoder();
+
 
         driveJoystick = new Joystick(0);
         utilityJoystick = new Joystick(1);
@@ -213,12 +220,23 @@ public class Robot extends TimedRobot {
 
 
     private void runRotating(){
-        if (utilityJoystick.getRawButton(rotatingButton)){
-            if (rotatingEncoder.getPosition() < rotatingLimit){
-                rotatingMotor.set(rotatingPower);
+        double power = utilityJoystick.getRawAxis(2);
+        double leftPower = power;
+        double rightPower = -power; 
+        double leftRotatingMotorVel = leftRotatingEncoder.getVelocity();
+        double rightRotatingMotorVel = rightRotatingEncoder.getVelocity();
+        double velocityRatio = leftRotatingMotorVel/-rightRotatingMotorVel;
+        if (leftRotatingMotorVel != 0){
+            if (velocityRatio > 1){
+                leftRotatingMotorVel = leftRotatingMotorVel / velocityRatio;
             }
-        }
-        rotatingMotor.set(0);
+            else if (velocityRatio < 1){
+                rightRotatingMotorVel = rightRotatingMotorVel * velocityRatio;
+            }
+        }   
+        System.out.println("Speed difference" + (leftRotatingMotorVel - rightRotatingMotorVel));
+        leftRotatingMotor.set(rotatingPower*power);
+        rightRotatingMotor.set(rotatingPower*power);        
     }
     private void runIMU() {
 
