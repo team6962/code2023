@@ -9,15 +9,11 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
-//import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
-//import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-//import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.I2C;
-//import edu.wpi.first.wpilibj.SPI;
 
 import com.kauailabs.navx.frc.AHRS;
 import java.util.TimerTask;
@@ -48,9 +44,6 @@ public class Robot extends TimedRobot {
     // Drive Motor Controllers
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
-
-    double rightBankEfficiency = 1.0;
-    double leftBankEfficiency = 1.0;
 
     DifferentialDrive drive;
 
@@ -245,39 +238,11 @@ public class Robot extends TimedRobot {
         double speedStraight = mapSpeed(axisStraight, baseSpeed, straightLimit, straightDeadZone);
         double speedTwist = mapSpeed(axisTwist, 0, twistLimit, twistDeadZone);
 
-        double rawLeftBankSpeed = speedStraight - speedTwist;
-        double rawRightBankSpeed = speedStraight + speedTwist;
-
-        double leftSign = Math.signum(rawLeftBankSpeed);
-        double absLeftBank = Math.abs(rawLeftBankSpeed);
-
-        double rightSign = Math.signum(rawRightBankSpeed);
-        double absRightBank = Math.abs(rawRightBankSpeed);
-
-        if (absLeftBank > straightLimit) {
-            absRightBank -= absLeftBank - straightLimit;
-            absLeftBank = straightLimit;
+        if (abs(speedStraight) + abs(speedTwist) > straightLimit) {
+            speedStraight *= (max(0, straightLimit - abs(speedTwist)) / abs(speedStraight))
         }
 
-        if (absRightBank > straightLimit) {
-            absLeftBank -= absRightBank - straightLimit;
-            absRightBank = straightLimit;
-        }
-
-        if (driveJoystick.getRawButton(8) && (absLeftBank * leftSign) == (absRightBank * rightSign)) {
-            double encoderRatio = leftBankEncoder.getVelocity() / rightBankEncoder.getVelocity();
-
-            if (Math.abs(encoderRatio) < 1) {
-                System.out.println("rightBankEfficiency: " + String.valueOf(encoderRatio));
-                System.out.println("leftBankEfficiency: 1.0");
-            } else {
-                System.out.println("rightBankEfficiency: 1.0");
-                System.out.println("leftBankEfficiency: " + String.valueOf(1 / encoderRatio));
-            }
-        }
-
-        drive.tankDrive((absLeftBank * leftSign) * leftBankEfficiency,
-                (absRightBank * rightSign) * rightBankEfficiency);
+        drive.arcadeDrive(speedStraight, speedTwist);
     }
 
     private double mapSpeed(double speed, double min, double max, double deadZone) {
