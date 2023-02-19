@@ -170,7 +170,7 @@ public class Robot extends TimedRobot {
 
         double pitch = ahrs.getPitch();
         double distance = leftBankEncoder.getPosition();
-        System.out.println("ENCODER DISTANCE:" + distance);
+        // System.out.println("ENCODER DISTANCE:" + distance);
         SmartDashboard.putNumber("encoderDistance", distance);
         SmartDashboard.putBoolean("balanced", balanced);
         SmartDashboard.putNumber("yaw", ahrs.getYaw());
@@ -237,10 +237,6 @@ public class Robot extends TimedRobot {
 
         double speedStraight = mapSpeed(axisStraight, baseSpeed, straightLimit, straightDeadZone);
         double speedTwist = mapSpeed(axisTwist, 0, twistLimit, twistDeadZone);
-
-        if (abs(speedStraight) + abs(speedTwist) > straightLimit) {
-            speedStraight *= (max(0, straightLimit - abs(speedTwist)) / abs(speedStraight))
-        }
 
         drive.arcadeDrive(speedStraight, speedTwist);
     }
