@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
 
     // Motor Controllers
     CANSparkMax spark;
-    double motorSpeed = 0.5;
+    double motorSpeed = 0.2;
 
     // Drive Motor Encoders
     RelativeEncoder encoder;
@@ -38,6 +38,9 @@ public class Robot extends TimedRobot {
     // Timings
     double timeNow;
     double timeStart;
+    double switchSide = -1.0;
+    boolean isOn = false;
+    double turnDist = 100.0;
 
     // Called when robot is enabled
     @Override
@@ -61,33 +64,57 @@ public class Robot extends TimedRobot {
     // Called when autonomous mode is enabled
     @Override
     public void autonomousInit() {
-        timeStart = System.currentTimeMillis();
+        // timeStart = System.currentTimeMillis();
     }
 
     // Called periodically in autonomous mode
     @Override
     public void autonomousPeriodic() {
-        timeNow = System.currentTimeMillis() - timeStart;
+        // timeNow = System.currentTimeMillis() - timeStart;
     }
 
     // Called when teleoperated mode is enabled
     @Override
     public void teleopInit() {
-        timeStart = System.currentTimeMillis();
+        // timeStart = System.currentTimeMillis();
     }
 
     // Called periodically in teleoperated mode
     @Override
     public void teleopPeriodic() {
-        if (joystick.getRawButton(1)) {
-            spark.set(motorSpeed);
-        } else {
-            spark.set(0.0);
+
+        System.out.println(encoder.getPosition());
+        double theDist = 0.0;
+
+        if (joystick.getRawButton(1)) { // if button 1 (trigger) pressed
+            isOn = true;
+            System.out.println(encoder.getPosition());
+            double distStart = encoder.getPosition();
+            while (((encoder.getPosition() >= (distStart)) && (encoder.getPosition() <= distStart+50))){
+                spark.set(motorSpeed);
+                //motorSpeed = motorSpeed * switchSide;
+            }
+            spark.set(0);
+            motorSpeed = motorSpeed * switchSide;
         }
+
+        // if (isOn && (motorSpeed > 0) && (theDist <= distStart + turnDist)){
+        //     spark.set(motorSpeed);
+        // } else if (isOn && (motorSpeed < 0) && (theDist <= distStart - turnDist)){
+        //     spark.set(motorSpeed);
+        // }
     }
+
+
 
     // Called periodically in test mode
     @Override
     public void testPeriodic() {
+    }
+
+    // This is required to remove warning messages
+    @Override
+    public void disabledPeriodic() {
+
     }
 }
