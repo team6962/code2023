@@ -226,12 +226,18 @@ public class Robot extends TimedRobot {
         double leftRotatingMotorVel = leftRotatingEncoder.getVelocity();
         double rightRotatingMotorVel = rightRotatingEncoder.getVelocity();
         double velocityRatio = leftRotatingMotorVel/-rightRotatingMotorVel;
-        if (leftRotatingMotorVel != 0){
-            if (velocityRatio > 1){
-                leftRotatingMotorVel = leftRotatingMotorVel / velocityRatio;
+        if (leftRotatingMotorVel != 0 && rightRotatingMotorVel != 0) {
+            if (leftPower != 0 && rightPower != 0) {
+                if (velocityRatio > 1){
+                    leftRotatingMotorVel = leftRotatingMotorVel / velocityRatio;
+                }
+                else if (velocityRatio < 1){
+                    rightRotatingMotorVel = rightRotatingMotorVel * velocityRatio;
+                }
             }
-            else if (velocityRatio < 1){
-                rightRotatingMotorVel = rightRotatingMotorVel * velocityRatio;
+            else {
+                leftRotatingMotorVel = 0;
+                rightRotatingMotorVel = 0;
             }
         }   
         System.out.println("Speed difference" + (leftRotatingMotorVel - rightRotatingMotorVel));
