@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
@@ -14,6 +15,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 
 import com.kauailabs.navx.frc.AHRS;
 import java.util.TimerTask;
@@ -45,11 +47,15 @@ public class Robot extends TimedRobot {
     MotorControllerGroup rightBank;
     MotorControllerGroup leftBank;
 
+    MotorControllerGroup arm;
+
     DifferentialDrive drive;
 
     // Drive Motor Encoders
     RelativeEncoder rightBankEncoder;
     RelativeEncoder leftBankEncoder;
+
+    DutyCycleEncoder armEncoder;
 
     // Timings
     double timeNow;
@@ -57,6 +63,10 @@ public class Robot extends TimedRobot {
 
     // IMU
     AHRS ahrs;
+
+    // Arm
+    double armSpeed = 0;
+    double armAngle = 50;
 
     // Calibration
     boolean calibratingSpeed = false;
@@ -67,22 +77,33 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         System.out.println("Initializing Robot");
 
-        CANSparkMax left1 = new CANSparkMax(1, MotorType.kBrushless);
-        CANSparkMax left2 = new CANSparkMax(2, MotorType.kBrushless);
-        CANSparkMax right1 = new CANSparkMax(3, MotorType.kBrushless);
-        CANSparkMax right2 = new CANSparkMax(4, MotorType.kBrushless);
+        CANSparkMax left1 = new CANSparkMax(10, MotorType.kBrushless);
+        CANSparkMax left2 = new CANSparkMax(28, MotorType.kBrushless);
+        CANSparkMax right1 = new CANSparkMax(7, MotorType.kBrushless);
+        CANSparkMax right2 = new CANSparkMax(27, MotorType.kBrushless);
+        CANSparkMax arm1 = new CANSparkMax(5, MotorType.kBrushless);
+        CANSparkMax arm2 = new CANSparkMax(15, MotorType.kBrushless);
+
+        arm2.setInverted(true);
 
         left1.setIdleMode(IdleMode.kBrake);
         left2.setIdleMode(IdleMode.kBrake);
         right1.setIdleMode(IdleMode.kBrake);
         right2.setIdleMode(IdleMode.kBrake);
+        arm1.setIdleMode(IdleMode.kBrake);
+        arm2.setIdleMode(IdleMode.kBrake);
 
         leftBank = new MotorControllerGroup(left1, left2);
         rightBank = new MotorControllerGroup(right1, right2);
         leftBank.setInverted(true);
 
+        arm = new MotorControllerGroup(arm1, arm2);
+
         leftBankEncoder = left1.getEncoder();
         rightBankEncoder = right1.getEncoder();
+
+        armEncoder = new DutyCycleEncoder(0);
+        armEncoder.setDistancePerRotation(360.0);
 
         drive = new DifferentialDrive(leftBank, rightBank);
 
@@ -134,8 +155,10 @@ public class Robot extends TimedRobot {
         }
 
         if (driveJoystick.getTrigger()) {
-            balance();
+            arm.set(driveJoystick.getRawAxis(4) / 8);
+            // balance();
         } else {
+            arm.set(0.0);
             teleopDrive();
         }
     }
@@ -182,25 +205,6 @@ public class Robot extends TimedRobot {
 
     private double mapNumber(double x, double a, double b, double c, double d) {
         return (x - a) / (b - a) * (d - c) + c;
-    }
-
-    private void runDiagnostics() {
-
-        // initialize vars
-        double curr_world_linear_accel_x = ahrs.getWorldLinearAccelX();
-        double currentJerkX = curr_world_linear_accel_x - last_world_linear_accel_x;
-        last_world_linear_accel_x = curr_world_linear_accel_x;
-        double curr_world_linear_accel_y = ahrs.getWorldLinearAccelY();
-        double currentJerkY = curr_world_linear_accel_y - last_world_linear_accel_y;
-        last_world_linear_accel_y = curr_world_linear_accel_y;
-
-        if ((Math.abs(currentJerkX) > kCollisionThreshold_DeltaG) ||
-                (Math.abs(currentJerkY) > kCollisionThreshold_DeltaG)) {
-            collisionDetected = true;
-        }
-
-        // SmartDashboard.putBoolean(  "CollisionDetected", collisionDetected);
-
     }
 
     private void calibrateSpeedInit() {
