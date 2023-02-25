@@ -51,14 +51,6 @@ public class Robot extends TimedRobot {
     RelativeEncoder rightBankEncoder;
     RelativeEncoder leftBankEncoder;
 
-    // Collision Detection 
-    double last_world_linear_accel_x = 0.0f;
-    double last_world_linear_accel_y = 0.0f;
-    boolean collisionDetected = false;
-    boolean balanced = false;
-    final static double kCollisionThreshold_DeltaG = 0.5f;
-    Timer timer = new Timer();
-
     // Timings
     double timeNow;
     double timeStart;
@@ -66,8 +58,7 @@ public class Robot extends TimedRobot {
     // IMU
     AHRS ahrs;
 
-    double balanceSpeed = 0;
-
+    // Calibration
     boolean calibratingSpeed = false;
     double calibratingTicks = 0.0;
 
@@ -128,18 +119,8 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         timeStart = System.currentTimeMillis();
 
-        collisionDetected = false;
-
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
-
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runDiagnostics();
-            }
-
-        }, 0, 50);
     }
 
     // Called periodically in teleoperated mode
@@ -152,8 +133,11 @@ public class Robot extends TimedRobot {
             return;
         }
 
-        // teleopDrive();
-        runIMU();
+        if (driveJoystick.getTrigger()) {
+            balance();
+        } else {
+            teleopDrive();
+        }
     }
 
     // Called periodically in test mode
@@ -166,67 +150,11 @@ public class Robot extends TimedRobot {
         }
     }
 
-    private void runIMU() {
-
+    private void balance() {
         double pitch = ahrs.getPitch();
-        double distance = leftBankEncoder.getPosition();
-        // System.out.println("ENCODER DISTANCE:" + distance);
-        SmartDashboard.putNumber("encoderDistance", distance);
-        SmartDashboard.putBoolean("balanced", balanced);
-        SmartDashboard.putNumber("yaw", ahrs.getYaw());
-
-        if (driveJoystick.getRawButtonPressed(2)) {
-            leftBankEncoder.setPosition(0);
-            ahrs.reset();
-            balanced = false;
-        }
-
-        // System.out.println(ahrs.getVelocityX());
-        if (driveJoystick.getTrigger()) {
-
-            if (Math.abs(pitch) > levelAngle) {
-                SmartDashboard.putBoolean("angled", true);
-                double speed = 0;
-                if (!balanced) {
-                    speed = (pitch / 180) + ((baseSpeed + 0.25) * Math.signum(pitch));
-                }
-                System.out.println(speed);
-                balanced = false;
-                drive.tankDrive(speed, speed);
-                SmartDashboard.putString("driveMode", "it costs zero dollars to turn the robot");
-
-            } else {
-                SmartDashboard.putBoolean("angled", false);
-                balanced = true;
-                leftBankEncoder.setPosition(0);
-            }
-
-            // if (balanced && ahrs.getYaw() > -90 && ahrs.getYaw() < 90) {
-
-            //     drive.tankDrive(-0.5, 0.5);
-            //     SmartDashboard.putString("driveMode", "yes");
-            // }
-            // if (Math.abs(pitch) < levelAngle) {
-            //     balanceSpeed = 0.0;
-            // }
-
-            // double velocity = ahrs.getVelocityX();
-
-            // // If not moving when trying to...
-            // if (Math.abs(velocity) < 0.1) {
-            //     balanceSpeed += 0.02;
-            // } else if (Math.abs(velocity) > 0.3) {
-            //     balanceSpeed -= 0.02;
-            // }
-
-            // double speed = (balanceSpeed + baseSpeed) * Math.signum(pitch);
-
-            // // double speed = (pitch / 90) + ((baseSpeed + 0.05) * Math.signum(pitch));
-
-            return;
-        } else {
-            teleopDrive();
-            return;
+        if (Math.abs(pitch) > levelAngle) {
+            double speed = (pitch / 180) + ((baseSpeed + 0.25) * Math.signum(pitch));
+            drive.tankDrive(speed, speed);
         }
     }
 
