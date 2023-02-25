@@ -155,7 +155,7 @@ public class Robot extends TimedRobot {
         }
 
         if (driveJoystick.getTrigger()) {
-            arm.set(driveJoystick.getRawAxis(4) / 8);
+            arm.set(mapSpeed(driveJoystick.getRawAxis(4), 0, 0.15, 0.2));
             // balance();
         } else {
             arm.set(0.0);
