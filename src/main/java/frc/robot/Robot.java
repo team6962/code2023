@@ -48,12 +48,15 @@ public class Robot extends TimedRobot {
     MotorControllerGroup leftBank;
 
     MotorControllerGroup arm;
+    CANSparkMax armExtend;
 
     DifferentialDrive drive;
 
     // Drive Motor Encoders
     RelativeEncoder rightBankEncoder;
     RelativeEncoder leftBankEncoder;
+    RelativeEncoder armExtendEncoder;
+    double extendLimit = -33;
 
     DutyCycleEncoder armEncoder;
 
@@ -83,6 +86,8 @@ public class Robot extends TimedRobot {
         CANSparkMax right2 = new CANSparkMax(27, MotorType.kBrushless);
         CANSparkMax arm1 = new CANSparkMax(5, MotorType.kBrushless);
         CANSparkMax arm2 = new CANSparkMax(15, MotorType.kBrushless);
+        armExtend = new CANSparkMax(13, MotorType.kBrushless);
+        armExtendEncoder = armExtend.getEncoder();
 
         arm2.setInverted(true);
 
@@ -92,6 +97,7 @@ public class Robot extends TimedRobot {
         right2.setIdleMode(IdleMode.kBrake);
         arm1.setIdleMode(IdleMode.kBrake);
         arm2.setIdleMode(IdleMode.kBrake);
+        armExtend.setIdleMode(IdleMode.kBrake);
 
         leftBank = new MotorControllerGroup(left1, left2);
         rightBank = new MotorControllerGroup(right1, right2);
@@ -153,19 +159,54 @@ public class Robot extends TimedRobot {
             drive.tankDrive(0.0, 0.0);
             return;
         }
+        
+        System.out.println(armEncoder.getDistance());
 
         if (driveJoystick.getTrigger()) {
-            arm.set(mapSpeed(driveJoystick.getRawAxis(4), 0, 0.15, 0.2));
+            double pos = armExtendEncoder.getPosition();
+            // System.out.println(pos);
+            double pov = driveJoystick.getPOV();
+            if ((pov == 0 || pov == 315 || pov == 45) && pos >= extendLimit) {
+                armExtend.set((-0.2 * ((extendLimit - pos) / extendLimit)) - 0.15);
+            } else if ((pov == 180 || pov == 225 || pov == 135) && pos <= -1) {
+                armExtend.set((0.2 * (1 - ((extendLimit - pos) / extendLimit))) + 0.15);
+            } else {
+                armExtend.set(0);
+            }
+
+            arm.set(-mapSpeed(driveJoystick.getRawAxis(3), 0, 0.15, 0.1));
             // balance();
+            drive.tankDrive(0.0, 0.0);
         } else {
             arm.set(0.0);
+            armExtend.set(0.0);
             teleopDrive();
         }
     }
 
+    // pos -0.1
+    // limit = -1
+
     // Called periodically in test mode
     @Override
     public void testPeriodic() {
+        CANSparkMax left1 = new CANSparkMax(10, MotorType.kBrushless);
+        CANSparkMax left2 = new CANSparkMax(28, MotorType.kBrushless);
+        CANSparkMax right1 = new CANSparkMax(7, MotorType.kBrushless);
+        CANSparkMax right2 = new CANSparkMax(27, MotorType.kBrushless);
+        CANSparkMax arm1 = new CANSparkMax(5, MotorType.kBrushless);
+        CANSparkMax arm2 = new CANSparkMax(15, MotorType.kBrushless);
+        armExtend = new CANSparkMax(13, MotorType.kBrushless);
+
+        left1.setIdleMode(IdleMode.kCoast);
+        left2.setIdleMode(IdleMode.kCoast);
+        right1.setIdleMode(IdleMode.kCoast);
+        right2.setIdleMode(IdleMode.kCoast);
+        arm1.setIdleMode(IdleMode.kCoast);
+        arm2.setIdleMode(IdleMode.kCoast);
+        armExtend.setIdleMode(IdleMode.kCoast);
+
+
         if (calibratingSpeed) {
             calibrateSpeed();
         } else if (driveJoystick.getTrigger()) {
