@@ -33,13 +33,14 @@ public class Robot extends TimedRobot {
 
     // ENABLED SYSTEMS
     boolean enableDrive = true;
-    boolean enableBalance = true;
+    boolean enableBalance = false;
     boolean enableArm = true;
+    boolean enableClaw = true;
 
 
     // DRIVER ADJUSTMENTS
-    double straightLimit = 0.4; // Hard limit on power when going forward / backward
-    double turnLimit = 0.4; // Hard limit on power when turning
+    double straightLimit = 0.3; // Hard limit on power when going forward / backward
+    double turnLimit = 0.3; // Hard limit on power when turning
 
     double twistDeadZone = 0.2; // Joystick deadzone for turning
     double straightDeadZone = 0.1; // Joystick deadzone for turning
@@ -57,14 +58,21 @@ public class Robot extends TimedRobot {
     // ARM EXTENSION
     double armExtendLimit = 33; // Arm extend limit (measured in encoder ticks)
     double armExtendPadding = 1; // Padding to prevent overshooting limits (measured in encoder ticks)
-    double armExtendBasePower = 0.15; // Slowest speed arm will extend (0 - 1)
+    double armExtendBasePower = 0.2; // Slowest speed arm will extend (0 - 1)
     double armExtendAddedPower = 0.2; // Additional speed added to base when far from limits (0 - 1)
 
-
+    
     // ARM LIFTING
     double armLiftPower = 0.15; // Max arm lifting power
-    double armLiftMinAngle = 20; // Min arm angle (degrees)
-    double armLiftMaxAngle = 70; // Max arm angle (degrees)
+    double armLiftMinAngle = 270; // Min arm angle (degrees)
+    double armLiftMaxAngle = 360; // Max arm angle (degrees)
+
+
+    // CLAW
+    double clawGrabLimit = 200; // Claw grab limit (measured in encoder ticks)
+    double clawGrabPadding = 10; // Padding to prevent overshooting limits (measured in encoder ticks)
+    double clawGrabBasePower = 0.15; // Slowest speed claw will grab (0 - 1)
+    double clawGrabAddedPower = 0.25; // Additional speed added to base when far from limits (0 - 1)
 
 
     // DEVICE IDS
@@ -75,6 +83,7 @@ public class Robot extends TimedRobot {
     int CAN_armLift1 = 5;
     int CAN_armLift2 = 15;
     int CAN_armExtend = 13;
+    int CAN_clawGrab = 16;
 
     int DIO_armLiftEncoder = 0;
 
@@ -91,11 +100,11 @@ public class Robot extends TimedRobot {
 
     // MOTOR CONTROLLERS
     MotorControllerGroup rightBank, leftBank, armLift;
-    CANSparkMax leftBank1, leftBank2, rightBank1, rightBank2, armLift1, armLift2, armExtend;
+    CANSparkMax leftBank1, leftBank2, rightBank1, rightBank2, armLift1, armLift2, armExtend, clawGrab;
     DifferentialDrive drive;
 
     // ENCODERS
-    RelativeEncoder rightBankEncoder, leftBankEncoder, armExtendEncoder;
+    RelativeEncoder rightBankEncoder, leftBankEncoder, armExtendEncoder, clawGrabEncoder;
     DutyCycleEncoder armLiftEncoder;
 
     // TIMINGS
@@ -168,6 +177,20 @@ public class Robot extends TimedRobot {
         armLiftEncoder.setDistancePerRotation(360.0);
 
 
+        /************** CLAW SETUP **************/
+
+        clawGrab = new CANSparkMax(CAN_clawGrab, MotorType.kBrushless);
+
+        clawGrab.restoreFactoryDefaults();
+
+        clawGrab.setIdleMode(IdleMode.kBrake);
+
+        clawGrab.setSoftLimit(SoftLimitDirection.kForward, (float) clawGrabLimit);
+        clawGrab.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
+
+        clawGrabEncoder = clawGrab.getEncoder();
+
+
         /********** DRIVER STATION SETUP ********/
 
         driveJoystick = new Joystick(USB_driveJoystick);
@@ -211,6 +234,12 @@ public class Robot extends TimedRobot {
         } else {
             System.out.println("Arm Disabled");
         }
+
+        if (enableClaw) {
+            runClaw();
+        } else {
+            System.out.println("Claw Disabled");
+        }
     }
 
     @Override
@@ -224,6 +253,8 @@ public class Robot extends TimedRobot {
         armLift2.setIdleMode(IdleMode.kCoast);
 
         armExtend.setIdleMode(IdleMode.kCoast);
+
+        clawGrab.setIdleMode(IdleMode.kCoast);
     }
 
 
@@ -271,12 +302,6 @@ public class Robot extends TimedRobot {
 
 
     public void runArm() {
-        if (!driveJoystick.getTrigger()) {
-            armExtend.set(0);
-            armLift.set(0);
-            return;
-        }
-
         double extendPos = armExtendEncoder.getPosition();
         double liftAngle = armLiftEncoder.getDistance();
         double pov = driveJoystick.getPOV();
@@ -289,8 +314,12 @@ public class Robot extends TimedRobot {
             armExtend.set(0);
         }
 
-        if (liftAngle >= armLiftMinAngle && liftAngle <= armLiftMaxAngle) {
-            armLift.set(-mapPower(driveJoystick.getRawAxis(3), 0, armLiftPower, throttleDeadZone));
+        if (driveJoystick.getTrigger()) {
+            if ((liftAngle <= armLiftMaxAngle && (-driveJoystick.getRawAxis(3)) > 0) || (liftAngle >= armLiftMinAngle && (-driveJoystick.getRawAxis(3)) < 0)) {
+                armLift.set(-mapPower(driveJoystick.getRawAxis(3), 0, armLiftPower, throttleDeadZone));     
+            } else {
+                armLift.set(0);
+            }
         } else {
             armLift.set(0);
         }
@@ -311,6 +340,21 @@ public class Robot extends TimedRobot {
     }
 
 
+    public void runClaw() {
+        double grabPos = -clawGrabEncoder.getPosition();
+        System.out.println(grabPos);
+        if (driveJoystick.getRawButton(5) && grabPos >= 0) {
+            // clawGrab.set(0.05);
+            clawGrab.set(mapNumber(grabPos, clawGrabPadding, clawGrabLimit - clawGrabPadding, 0, clawGrabAddedPower) + clawGrabBasePower);
+        } else if (driveJoystick.getRawButton(3) && grabPos <= clawGrabLimit) {
+            // clawGrab.set(-0.05);
+            clawGrab.set(-(mapNumber(grabPos, clawGrabPadding, clawGrabLimit - clawGrabPadding, clawGrabAddedPower, 0) + clawGrabBasePower));
+        } else {
+            clawGrab.set(0);
+        }
+    }
+
+
     private double mapPower(double power, double min, double max, double deadZone) {
         double sign = Math.signum(power);
         double absPower = Math.abs(power);
@@ -324,6 +368,12 @@ public class Robot extends TimedRobot {
 
 
     private double mapNumber(double x, double a, double b, double c, double d) {
+        if (x < a) {
+            return c;
+        }
+        if (x > b) {
+            return d;
+        }
         return (x - a) / (b - a) * (d - c) + c;
     }
 
