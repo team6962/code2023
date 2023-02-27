@@ -57,11 +57,11 @@ public class Robot extends TimedRobot {
 
     // ARM EXTENSION
     double armExtendLimit = 33; // Arm extend limit (measured in encoder ticks)
-    double armExtendPadding = 1; // Padding to prevent overshooting limits (measured in encoder ticks)
-    double armExtendBasePower = 0.2; // Slowest speed arm will extend (0 - 1)
-    double armExtendAddedPower = 0.2; // Additional speed added to base when far from limits (0 - 1)
+    double armExtendPadding = 0.2; // Padding to prevent overshooting limits (measured in percent 0 - 1)
+    double armExtendMinPower = 0.05; // Slowest speed arm will extend (0 - 1)
+    double armExtendMaxPower = 0.4; // Fastest speed arm will extend (0 - 1)
 
-    
+
     // ARM LIFTING
     double armLiftPower = 0.15; // Max arm lifting power
     double armLiftMinAngle = 270; // Min arm angle (degrees)
@@ -70,9 +70,9 @@ public class Robot extends TimedRobot {
 
     // CLAW
     double clawGrabLimit = 200; // Claw grab limit (measured in encoder ticks)
-    double clawGrabPadding = 10; // Padding to prevent overshooting limits (measured in encoder ticks)
-    double clawGrabBasePower = 0.15; // Slowest speed claw will grab (0 - 1)
-    double clawGrabAddedPower = 0.25; // Additional speed added to base when far from limits (0 - 1)
+    double clawGrabPadding = 0.2; // Padding to prevent overshooting limits (measured in percent 0 - 1)
+    double clawGrabMinPower = 0.05; // Slowest speed claw will grab (0 - 1)
+    double clawGrabMaxPower = 0.4; // Fastest speed claw will grab (0 - 1)
 
 
     // DEVICE IDS
@@ -306,17 +306,17 @@ public class Robot extends TimedRobot {
         double liftAngle = armLiftEncoder.getDistance();
         double pov = driveJoystick.getPOV();
 
-        if ((pov == 0 || pov == 315 || pov == 45) && extendPos <= armExtendLimit) {
-            armExtend.set(mapNumber(extendPos, armExtendPadding, armExtendLimit - armExtendPadding, armExtendAddedPower, 0) + armExtendBasePower);
-        } else if ((pov == 180 || pov == 225 || pov == 135) && extendPos >= 0) {
-            armExtend.set(-(mapNumber(extendPos, armExtendPadding, armExtendLimit - armExtendPadding, 0, armExtendAddedPower) + armExtendBasePower));
+        if (pov == 0 || pov == 315 || pov == 45) {
+            armExtend.set(mapLimitedPower(1, extendPos, 0, armExtendLimit, armExtendMinPower, armExtendMaxPower, armExtendPadding * armExtendLimit));
+        } else if (pov == 180 || pov == 225 || pov == 135) {
+            armExtend.set(mapLimitedPower(-1, extendPos, 0, armExtendLimit, armExtendMinPower, armExtendMaxPower, armExtendPadding * armExtendLimit));
         } else {
             armExtend.set(0);
         }
 
         if (driveJoystick.getTrigger()) {
             if ((liftAngle <= armLiftMaxAngle && (-driveJoystick.getRawAxis(3)) > 0) || (liftAngle >= armLiftMinAngle && (-driveJoystick.getRawAxis(3)) < 0)) {
-                armLift.set(-mapPower(driveJoystick.getRawAxis(3), 0, armLiftPower, throttleDeadZone));     
+                armLift.set(-mapPower(driveJoystick.getRawAxis(3), 0, armLiftPower, throttleDeadZone));
             } else {
                 armLift.set(0);
             }
@@ -342,13 +342,10 @@ public class Robot extends TimedRobot {
 
     public void runClaw() {
         double grabPos = -clawGrabEncoder.getPosition();
-        System.out.println(grabPos);
-        if (driveJoystick.getRawButton(5) && grabPos >= 0) {
-            // clawGrab.set(0.05);
-            clawGrab.set(mapNumber(grabPos, clawGrabPadding, clawGrabLimit - clawGrabPadding, 0, clawGrabAddedPower) + clawGrabBasePower);
-        } else if (driveJoystick.getRawButton(3) && grabPos <= clawGrabLimit) {
-            // clawGrab.set(-0.05);
-            clawGrab.set(-(mapNumber(grabPos, clawGrabPadding, clawGrabLimit - clawGrabPadding, clawGrabAddedPower, 0) + clawGrabBasePower));
+        if (driveJoystick.getRawButton(5)) {
+            clawGrab.set(mapLimitedPower(1, grabPos, 0, clawGrabLimit, clawGrabMinPower, clawGrabMaxPower, clawGrabPadding * clawGrabLimit));
+        } else if (driveJoystick.getRawButton(3)) {
+            clawGrab.set(mapLimitedPower(-1, grabPos, 0, clawGrabLimit, clawGrabMinPower, clawGrabMaxPower, clawGrabPadding * clawGrabLimit));
         } else {
             clawGrab.set(0);
         }
@@ -363,6 +360,30 @@ public class Robot extends TimedRobot {
             return 0.0;
         } else {
             return mapNumber(absPower, deadZone, 1, min, max) * sign;
+        }
+    }
+
+    private double mapLimitedPower(double direction, double pos, double minPos, double maxPos, double minPower, double maxPower, double padding) {
+        if (direction > 0) {
+            if (pos > maxPos) {
+                return 0.0;
+            }
+            if (pos > maxPos - padding) {
+                return mapNumber(pos, maxPos - padding, maxPos, maxPower, minPower);
+            } else {
+                return maxPower;
+            }
+        } else if (direction < 0) {
+            if (pos < minPos) {
+                return 0.0;
+            }
+            if (pos < minPos + padding) {
+                return -mapNumber(pos, minPos, minPos + padding, minPower, maxPower);
+            } else {
+                return -maxPower;
+            }
+        } else {
+            return 0.0;
         }
     }
 
