@@ -315,7 +315,7 @@ public class Robot extends TimedRobot {
         }
 
         if (driveJoystick.getTrigger()) {
-            if ((liftAngle <= armLiftMaxAngle && (-driveJoystick.getRawAxis(3)) > 0) || (liftAngle >= armLiftMinAngle && (-driveJoystick.getRawAxis(3)) < 0)) {
+            if ((liftAngle <= armLiftMaxAngle && -driveJoystick.getRawAxis(3) > 0) || (liftAngle >= armLiftMinAngle && -driveJoystick.getRawAxis(3) < 0)) {
                 armLift.set(-mapPower(driveJoystick.getRawAxis(3), 0, armLiftPower, throttleDeadZone));
             } else {
                 armLift.set(0);
