@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import com.kauailabs.navx.frc.AHRS;
 import java.util.TimerTask;
 import java.util.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.*;
 
 
 public class Robot extends TimedRobot {
@@ -34,14 +34,14 @@ public class Robot extends TimedRobot {
 
     // ENABLED SYSTEMS
     boolean enableDrive = true;
-    boolean enableBalance = false;
+    boolean enableBalance = true;
     boolean enableArm = true;
-    boolean enableClaw = true;
+    boolean enableClaw = false;
 
 
     // DRIVER ADJUSTMENTS
-    double straightLimit = 0.3; // Hard limit on power when going forward / backward
-    double turnLimit = 0.3; // Hard limit on power when turning
+    double straightLimit = 0.4; // Hard limit on power when going forward / backward
+    double turnLimit = 0.4; // Hard limit on power when turning
 
     double twistDeadZone = 0.2; // Joystick deadzone for turning
     double straightDeadZone = 0.1; // Joystick deadzone for turning
@@ -91,7 +91,6 @@ public class Robot extends TimedRobot {
 
     int USB_driveJoystick = 0;
     int USB_utilityJoystick = 1;
-    
 
     /****************************************/
     /*********** Global Variables ***********/
@@ -131,7 +130,7 @@ public class Robot extends TimedRobot {
 
 
         /************** DRIVE SETUP *************/
-
+        
         leftBank1 = new CANSparkMax(CAN_leftBank1, MotorType.kBrushless);
         leftBank2 = new CANSparkMax(CAN_leftBank2, MotorType.kBrushless);
         rightBank1 = new CANSparkMax(CAN_rightBank1, MotorType.kBrushless);
@@ -185,25 +184,28 @@ public class Robot extends TimedRobot {
 
         /************** CLAW SETUP **************/
 
-        clawGrab = new CANSparkMax(CAN_clawGrab, MotorType.kBrushless);
+        if (enableClaw) {
 
-        clawGrab.restoreFactoryDefaults();
+            clawGrab = new CANSparkMax(CAN_clawGrab, MotorType.kBrushless);
 
-        clawGrab.setIdleMode(IdleMode.kBrake);
+            clawGrab.restoreFactoryDefaults();
 
-        clawGrab.setSoftLimit(SoftLimitDirection.kForward, (float) clawGrabLimit);
-        clawGrab.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
+            clawGrab.setIdleMode(IdleMode.kBrake);
 
-        clawGrabEncoder = clawGrab.getEncoder();
+            clawGrab.setSoftLimit(SoftLimitDirection.kForward, (float) clawGrabLimit);
+            clawGrab.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
 
-        clawStop = new DigitalInput(1);
+            clawGrabEncoder = clawGrab.getEncoder();
+
+            clawStop = new DigitalInput(1);
+        }
 
 
         /********** DRIVER STATION SETUP ********/
 
         driveJoystick = new Joystick(USB_driveJoystick);
         utilityJoystick = new Joystick(USB_utilityJoystick);
-
+        
 
         /*************** IMU SETUP **************/
 
@@ -226,7 +228,9 @@ public class Robot extends TimedRobot {
 
         armExtend.setIdleMode(IdleMode.kBrake);
 
-        clawGrab.setIdleMode(IdleMode.kBrake);
+        if (enableClaw) {
+            clawGrab.setIdleMode(IdleMode.kBrake);
+        }
         
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
@@ -239,26 +243,19 @@ public class Robot extends TimedRobot {
         if (enableDrive) {
             runDrive();
         } else {
-            System.out.println("Drive Disabled");
             drive.tankDrive(0, 0);
         }
 
-        if (enableBalance) {
+        if (enableBalance && driveJoystick.getRawButton(11)) {
             runBalance();
-        } else {
-            System.out.println("Balance Disabled");
         }
 
         if (enableArm) {
             runArm();
-        } else {
-            System.out.println("Arm Disabled");
         }
 
         if (enableClaw) {
             runClaw();
-        } else {
-            System.out.println("Claw Disabled");
         }
     }
 
@@ -274,7 +271,9 @@ public class Robot extends TimedRobot {
 
         armExtend.setIdleMode(IdleMode.kCoast);
 
-        clawGrab.setIdleMode(IdleMode.kCoast);
+        if (enableClaw) {
+            clawGrab.setIdleMode(IdleMode.kCoast);
+        }
     }
 
 
@@ -292,6 +291,7 @@ public class Robot extends TimedRobot {
     // Called periodically when robot is enabled
     @Override
     public void robotPeriodic() {
+        updateDashboard();
     }
 
 
@@ -326,26 +326,27 @@ public class Robot extends TimedRobot {
         double liftAngle = armLiftEncoder.getDistance();
         double pov = driveJoystick.getPOV();
 
-        if (pov == 0 || pov == 315 || pov == 45 || driveJoystick.getRawButton(6)) {
-            if (driveJoystick.getRawButton(6)) {
-                armExtend.set(armExtendMinPower);
-            } else {
-                armExtend.set(mapLimitedPower(1, extendPos, 0, armExtendLimit, armExtendMinPower, armExtendMaxPower, armExtendPadding * armExtendLimit));
-            }
-        } else if (pov == 180 || pov == 225 || pov == 135 || driveJoystick.getRawButton(4)) {
-            if (driveJoystick.getRawButton(4)) {
-                armExtend.set(-armExtendMinPower);
-            } else {
-                armExtend.set(mapLimitedPower(-1, extendPos, 0, armExtendLimit, armExtendMinPower, armExtendMaxPower, armExtendPadding * armExtendLimit));
-            }
-        } else {
-            armExtend.set(0);
+
+        // Arm Extension
+        int extendDirection = 0;
+        double extendPower = armExtendMaxPower;
+
+        if (driveJoystick.getRawButton(6) || driveJoystick.getRawButton(4)) {
+            extendPower = armExtendMinPower;
         }
 
+        if (pov == 0 || pov == 315 || pov == 45 || driveJoystick.getRawButton(6)) {
+            extendDirection = 1;
+        } else if (pov == 180 || pov == 225 || pov == 135 || driveJoystick.getRawButton(4)) {
+            extendDirection = -1;
+        }
+        
+        armExtend.set(mapLimitedPower(extendDirection, extendPos, 0, armExtendLimit, armExtendMinPower, extendPower, armExtendPadding * armExtendLimit));
+        
+
+        // Arm Lifting
         if (driveJoystick.getTrigger()) {
-            if ((liftAngle <= armLiftMaxAngle && -driveJoystick.getRawAxis(3) > 0) || (liftAngle >= armLiftMinAngle && -driveJoystick.getRawAxis(3) < 0)) {
-                currentArmLiftPower = -mapPower(driveJoystick.getRawAxis(3), 0, armLiftMaxPower, throttleDeadZone);
-            }
+            currentArmLiftPower = -mapPower(driveJoystick.getRawAxis(3), 0, armLiftMaxPower, throttleDeadZone);
         }
 
         if (liftAngle > armLiftMaxAngle) {
@@ -357,22 +358,15 @@ public class Robot extends TimedRobot {
         }
 
         currentArmLiftPower = Math.min(armLiftMaxPower, Math.abs(currentArmLiftPower)) * Math.signum(currentArmLiftPower);
-
-        System.out.println(currentArmLiftPower);
-
+        
         armLift.set(currentArmLiftPower);
     }
 
 
     private void runBalance() {
-        if (!driveJoystick.getRawButton(11)) {
-            drive.tankDrive(0, 0);
-            return;
-        }
-
         double pitch = IMU.getPitch();
         if (Math.abs(pitch) > balanceLevelAngle) {
-            double power = (pitch / 360 * balanceAngleMultiple) + (balanceBasePower * Math.signum(pitch));
+            double power = -((pitch / 360 * balanceAngleMultiple) + (balanceBasePower * Math.signum(pitch)));
             drive.tankDrive(power, power);
         }
     }
@@ -395,6 +389,34 @@ public class Robot extends TimedRobot {
     }
 
 
+    /* 
+    TODO: Prevent arm from extending into the ground
+
+    TODO: Add smartdashboard stuff
+        Things to add:
+        - Claw state (open / closed / at limits)
+        - Solenoid state (opening or closing)
+        - Arm state (Angle, extend position, if in range of preset)
+        - Mode (teleop vs auton)
+        - Camera feed
+        - 3D position data
+        - Drive state (Max power, left and right encoder speeds vs their motor power)
+        - Balance state (if ready to balance, angle currently)
+        - Enabled Systems
+        - Coast vs Brake on all motor controllers (Group by system)
+        - 
+    */
+
+    private void updateDashboard() {
+        ShuffleboardTab dashboard = Shuffleboard.getTab("Dashboard");
+
+        dashboard.add("Drive", drive);
+        dashboard.add("Arm Angle", armLiftEncoder.getDistance()).withWidget("Gyro");
+        dashboard.add("Arm Extension %", (armExtendEncoder.getPosition() / armExtendLimit) * 100);
+        dashboard.add("Balance Angle", IMU.getPitch());
+    }
+
+
     private double mapPower(double power, double min, double max, double deadZone) {
         double sign = Math.signum(power);
         double absPower = Math.abs(power);
@@ -406,7 +428,7 @@ public class Robot extends TimedRobot {
         }
     }
 
-    private double mapLimitedPower(double direction, double pos, double minPos, double maxPos, double minPower, double maxPower, double padding) {
+    private double mapLimitedPower(int direction, double pos, double minPos, double maxPos, double minPower, double maxPower, double padding) {
         if (direction > 0) {
             if (pos > maxPos) {
                 return 0.0;
@@ -447,6 +469,7 @@ public class Robot extends TimedRobot {
         doingCalibration = true;
         calibratingTicks = 0.0;
     }
+
 
     private void calibrateBasePower() {
         drive.tankDrive(calibratingTicks / 100, calibratingTicks / 100);
