@@ -22,7 +22,7 @@ import com.kauailabs.navx.frc.AHRS;
 import java.util.TimerTask;
 import java.util.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import frc.robot.LimelightHelpers;
 
 public class Robot extends TimedRobot {
 
@@ -36,6 +36,7 @@ public class Robot extends TimedRobot {
     boolean enableBalance = false;
     boolean enableArm = true;
     boolean enableClaw = true;
+    boolean enableVision = false;
 
 
     // DRIVER ADJUSTMENTS
@@ -240,6 +241,12 @@ public class Robot extends TimedRobot {
         } else {
             System.out.println("Claw Disabled");
         }
+
+        if (enableVision) {
+            runVision();
+        } else {
+            System.out.println("Vision Disabled");
+        }
     }
 
     @Override
@@ -301,7 +308,7 @@ public class Robot extends TimedRobot {
     }
 
 
-    public void runArm() {
+    private void runArm() {
         double extendPos = armExtendEncoder.getPosition();
         double liftAngle = armLiftEncoder.getDistance();
         double pov = driveJoystick.getPOV();
@@ -340,7 +347,7 @@ public class Robot extends TimedRobot {
     }
 
 
-    public void runClaw() {
+    private void runClaw() {
         double grabPos = -clawGrabEncoder.getPosition();
         if (driveJoystick.getRawButton(5)) {
             clawGrab.set(mapLimitedPower(1, grabPos, 0, clawGrabLimit, clawGrabMinPower, clawGrabMaxPower, clawGrabPadding * clawGrabLimit));
@@ -349,6 +356,10 @@ public class Robot extends TimedRobot {
         } else {
             clawGrab.set(0);
         }
+    }
+
+    private void runVision() {
+
     }
 
 
