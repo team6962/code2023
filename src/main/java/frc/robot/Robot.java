@@ -424,9 +424,9 @@ public class Robot extends TimedRobot {
 
     private void runPneumaticClaw() {
         if (driveJoystick.getRawButton(5)) {
-            clawSolenoid.set(DoubleSolenoid.Value.kForward);
-        } else if (driveJoystick.getRawButton(3)) {
             clawSolenoid.set(DoubleSolenoid.Value.kReverse);
+        } else if (driveJoystick.getRawButton(3)) {
+            clawSolenoid.set(DoubleSolenoid.Value.kForward);
         }
     }
 
@@ -454,12 +454,12 @@ public class Robot extends TimedRobot {
     */
 
     private void updateDashboard() {
-        ShuffleboardTab dashboard = Shuffleboard.getTab("Dashboard");
+        // ShuffleboardTab dashboard = Shuffleboard.getTab("Dashboard");
 
-        dashboard.add("Drive", drive);
-        dashboard.add("Arm Angle", armLiftEncoder.getDistance()).withWidget("Gyro");
-        dashboard.add("Arm Extension %", (armExtendEncoder.getPosition() / armExtendLimit) * 100);
-        dashboard.add("Balance Angle", IMU.getPitch());
+        // dashboard.add("Drive", drive);
+        // dashboard.add("Arm Angle", armLiftEncoder.getDistance()).withWidget("Gyro");
+        // dashboard.add("Arm Extension %", (armExtendEncoder.getPosition() / armExtendLimit) * 100);
+        // dashboard.add("Balance Angle", IMU.getPitch());
     }
 
 
