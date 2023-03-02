@@ -18,9 +18,13 @@ import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 import com.kauailabs.navx.frc.AHRS;
 import java.util.TimerTask;
+import java.nio.file.ClosedWatchServiceException;
 import java.util.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.*;
 
@@ -38,7 +42,8 @@ public class Robot extends TimedRobot {
     boolean enableDrive = true;
     boolean enableBalance = true;
     boolean enableArm = true;
-    boolean enableClaw = true;
+    boolean enableClaw = false;
+    boolean enablePneumaticClaw = true;
     boolean enableVision = false;
 
 
@@ -121,24 +126,29 @@ public class Robot extends TimedRobot {
     // IMU
     AHRS IMU;
 
-    // Calibration
+    // CALIBRATION
     boolean doingCalibration = false;
     double calibratingTicks = 0.0;
 
+    // PNEUMATICS
+    Compressor clawCompressor;
+    DoubleSolenoid clawSolenoid;
 
+        
+    
     // Called when robot is enabled
     @Override
     public void robotInit() {
         System.out.println("Initializing Robot");
-
-
+        
+        
         /************** DRIVE SETUP *************/
         
         leftBank1 = new CANSparkMax(CAN_leftBank1, MotorType.kBrushless);
         leftBank2 = new CANSparkMax(CAN_leftBank2, MotorType.kBrushless);
         rightBank1 = new CANSparkMax(CAN_rightBank1, MotorType.kBrushless);
         rightBank2 = new CANSparkMax(CAN_rightBank2, MotorType.kBrushless);
-
+        
         leftBank1.restoreFactoryDefaults();
         leftBank2.restoreFactoryDefaults();
         rightBank1.restoreFactoryDefaults();
@@ -148,62 +158,73 @@ public class Robot extends TimedRobot {
         leftBank2.setIdleMode(IdleMode.kBrake);
         rightBank1.setIdleMode(IdleMode.kBrake);
         rightBank2.setIdleMode(IdleMode.kBrake);
-
+        
         rightBank = new MotorControllerGroup(rightBank1, rightBank2);
         leftBank = new MotorControllerGroup(leftBank1, leftBank2);
         leftBank.setInverted(true);
-
+        
         drive = new DifferentialDrive(leftBank, rightBank);
-
+        
         leftBankEncoder = leftBank1.getEncoder();
         rightBankEncoder = rightBank1.getEncoder();
-
-
+        
+        
         /*************** ARM SETUP **************/
-
+        
         armLift1 = new CANSparkMax(CAN_armLift1, MotorType.kBrushless);
         armLift2 = new CANSparkMax(CAN_armLift2, MotorType.kBrushless);
         armExtend = new CANSparkMax(CAN_armExtend, MotorType.kBrushless);
-
+        
         armLift1.restoreFactoryDefaults();
         armLift2.restoreFactoryDefaults();
         armExtend.restoreFactoryDefaults();
-
+        
         armLift1.setIdleMode(IdleMode.kBrake);
         armLift2.setIdleMode(IdleMode.kBrake);
         armExtend.setIdleMode(IdleMode.kBrake);
-
+        
         armLift2.setInverted(true);
         armLift = new MotorControllerGroup(armLift1, armLift2);
-
+        
         armExtend.setInverted(true);
         armExtend.setSoftLimit(SoftLimitDirection.kForward, (float) armExtendLimit);
         armExtend.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
-
+        
         armExtendEncoder = armExtend.getEncoder();
         armLiftEncoder = new DutyCycleEncoder(DIO_armLiftEncoder);
         armLiftEncoder.setDistancePerRotation(360.0);
-
-
+        
+        
         /************** CLAW SETUP **************/
-
+        
         if (enableClaw) {
-
+            
             clawGrab = new CANSparkMax(CAN_clawGrab, MotorType.kBrushless);
-
+            
             clawGrab.restoreFactoryDefaults();
-
+            
             clawGrab.setIdleMode(IdleMode.kBrake);
-
+            
             clawGrab.setSoftLimit(SoftLimitDirection.kForward, (float) clawGrabLimit);
             clawGrab.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
-
+            
             clawGrabEncoder = clawGrab.getEncoder();
-
+            
             clawStop = new DigitalInput(1);
         }
+        
+        /********** PNEUMATIC CLAW SETUP ********/
+        
+        clawCompressor = new Compressor(0, PneumaticsModuleType.CTREPCM);
+        clawCompressor.enableDigital();
 
-
+        if (!enablePneumaticClaw) {
+            clawCompressor.disable();
+        }
+    
+        clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
+        clawSolenoid.set(DoubleSolenoid.Value.kOff);
+        
         /********** DRIVER STATION SETUP ********/
 
         driveJoystick = new Joystick(USB_driveJoystick);
@@ -259,6 +280,10 @@ public class Robot extends TimedRobot {
 
         if (enableClaw) {
             runClaw();
+        }
+
+        if (enablePneumaticClaw) {
+            runPneumaticClaw();
         }
 
         if (enableVision) {
@@ -381,7 +406,7 @@ public class Robot extends TimedRobot {
     }
 
 
-    public void runClaw() {
+    private void runClaw() {
         double grabPos = clawGrabEncoder.getPosition();
         System.out.println(clawStop.get());
         if (driveJoystick.getRawButton(5)) { // Closing
@@ -394,6 +419,14 @@ public class Robot extends TimedRobot {
             clawGrab.set(mapLimitedPower(-1, grabPos, clawGrabLimit, 0, clawGrabMinPower, clawGrabMaxPower, clawGrabPadding * clawGrabLimit));
         } else {
             clawGrab.set(0);
+        }
+    }
+
+    private void runPneumaticClaw() {
+        if (driveJoystick.getRawButton(5)) {
+            clawSolenoid.set(DoubleSolenoid.Value.kForward);
+        } else if (driveJoystick.getRawButton(3)) {
+            clawSolenoid.set(DoubleSolenoid.Value.kReverse);
         }
     }
 
