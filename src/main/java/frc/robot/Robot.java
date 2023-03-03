@@ -64,6 +64,13 @@ public class Robot extends TimedRobot {
     double balanceBasePower = 0.25; // Base balancing speed
 
 
+    // ARM POSITIONING
+    double armExtendInches = 60; // Inches from pivot when fully extended
+    double armRetractInches = 20; // Inches from pivot when fully retracted
+    double armHeightInches = 40; // Inches above ground from pivot
+    double armLiftEncoderOffset = 0; // Offset so encoder reads 90 degrees when parallel to ground
+
+
     // ARM EXTENSION
     double armExtendLimit = 33; // Arm extend limit (measured in encoder ticks)
     double armExtendPadding = 0.2; // Padding to prevent overshooting limits (measured in percent 0 - 1)
@@ -74,8 +81,9 @@ public class Robot extends TimedRobot {
     // ARM LIFTING
     double armLiftMaxPower = 0.15; // Max arm lifting power
     double armLiftPowerIncrement = 0.005; // Arm lifting power increment each tick
-    double armLiftMinAngle = 270; // Min arm angle (degrees)
-    double armLiftMaxAngle = 360; // Max arm angle (degrees)
+    double armLiftMinAngle = 270 - armLiftEncoderOffset; // Min arm angle (degrees)
+    double armLiftMaxAngle = 360 - armLiftEncoderOffset; // Max arm angle (degrees)
+    double armLiftAnglePrecision = 1; // Degrees of precision
 
 
     // CLAW
@@ -100,6 +108,7 @@ public class Robot extends TimedRobot {
     int USB_driveJoystick = 0;
     int USB_utilityJoystick = 1;
 
+
     /****************************************/
     /*********** Global Variables ***********/
     /****************************************/
@@ -121,7 +130,6 @@ public class Robot extends TimedRobot {
 
     // TIMINGS
     double timeNow, timeStart;
-    double currentArmLiftPower = 0.0;
 
     // IMU
     AHRS IMU;
@@ -134,21 +142,25 @@ public class Robot extends TimedRobot {
     Compressor clawCompressor;
     DoubleSolenoid clawSolenoid;
 
-        
-    
+    // ARM LIFTING
+    double armLiftBasePower = 0;
+    double armLiftTargetAngle = 0;
+    double p_armLiftEncoder = 0;
+
+
     // Called when robot is enabled
     @Override
     public void robotInit() {
         System.out.println("Initializing Robot");
-        
-        
+
+
         /************** DRIVE SETUP *************/
-        
+
         leftBank1 = new CANSparkMax(CAN_leftBank1, MotorType.kBrushless);
         leftBank2 = new CANSparkMax(CAN_leftBank2, MotorType.kBrushless);
         rightBank1 = new CANSparkMax(CAN_rightBank1, MotorType.kBrushless);
         rightBank2 = new CANSparkMax(CAN_rightBank2, MotorType.kBrushless);
-        
+
         leftBank1.restoreFactoryDefaults();
         leftBank2.restoreFactoryDefaults();
         rightBank1.restoreFactoryDefaults();
@@ -158,78 +170,82 @@ public class Robot extends TimedRobot {
         leftBank2.setIdleMode(IdleMode.kBrake);
         rightBank1.setIdleMode(IdleMode.kBrake);
         rightBank2.setIdleMode(IdleMode.kBrake);
-        
+
         rightBank = new MotorControllerGroup(rightBank1, rightBank2);
         leftBank = new MotorControllerGroup(leftBank1, leftBank2);
         leftBank.setInverted(true);
-        
+
         drive = new DifferentialDrive(leftBank, rightBank);
-        
+
         leftBankEncoder = leftBank1.getEncoder();
         rightBankEncoder = rightBank1.getEncoder();
-        
-        
+
+
         /*************** ARM SETUP **************/
-        
+
         armLift1 = new CANSparkMax(CAN_armLift1, MotorType.kBrushless);
         armLift2 = new CANSparkMax(CAN_armLift2, MotorType.kBrushless);
         armExtend = new CANSparkMax(CAN_armExtend, MotorType.kBrushless);
-        
+
         armLift1.restoreFactoryDefaults();
         armLift2.restoreFactoryDefaults();
         armExtend.restoreFactoryDefaults();
-        
+
         armLift1.setIdleMode(IdleMode.kBrake);
         armLift2.setIdleMode(IdleMode.kBrake);
         armExtend.setIdleMode(IdleMode.kBrake);
-        
+
         armLift2.setInverted(true);
         armLift = new MotorControllerGroup(armLift1, armLift2);
-        
+
         armExtend.setInverted(true);
         armExtend.setSoftLimit(SoftLimitDirection.kForward, (float) armExtendLimit);
         armExtend.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
-        
+
         armExtendEncoder = armExtend.getEncoder();
         armLiftEncoder = new DutyCycleEncoder(DIO_armLiftEncoder);
         armLiftEncoder.setDistancePerRotation(360.0);
-        
-        
+        armLiftEncoder.setPositionOffset(armLiftEncoderOffset);
+
+        p_armLiftEncoder = armLiftEncoder.getDistance();
+        armLiftTargetAngle = armLiftEncoder.getDistance();
+
+
         /************** CLAW SETUP **************/
-        
+
         if (enableClaw) {
-            
+
             clawGrab = new CANSparkMax(CAN_clawGrab, MotorType.kBrushless);
-            
+
             clawGrab.restoreFactoryDefaults();
-            
+
             clawGrab.setIdleMode(IdleMode.kBrake);
-            
+
             clawGrab.setSoftLimit(SoftLimitDirection.kForward, (float) clawGrabLimit);
             clawGrab.setSoftLimit(SoftLimitDirection.kReverse, (float) 0);
-            
+
             clawGrabEncoder = clawGrab.getEncoder();
-            
+
             clawStop = new DigitalInput(1);
         }
-        
+
         /********** PNEUMATIC CLAW SETUP ********/
-        
+
         clawCompressor = new Compressor(0, PneumaticsModuleType.CTREPCM);
         clawCompressor.enableDigital();
 
         if (!enablePneumaticClaw) {
             clawCompressor.disable();
         }
-    
+
         clawSolenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 0, 1);
         clawSolenoid.set(DoubleSolenoid.Value.kOff);
-        
+
         /********** DRIVER STATION SETUP ********/
 
         driveJoystick = new Joystick(USB_driveJoystick);
         utilityJoystick = new Joystick(USB_utilityJoystick);
-        
+
 
         /*************** IMU SETUP **************/
 
@@ -255,7 +271,7 @@ public class Robot extends TimedRobot {
         if (enableClaw) {
             clawGrab.setIdleMode(IdleMode.kBrake);
         }
-        
+
         System.out.println("Initializing Teleoperated Driving");
         drive.tankDrive(0, 0);
     }
@@ -356,12 +372,14 @@ public class Robot extends TimedRobot {
 
 
     private void runArm() {
-        double extendPos = armExtendEncoder.getPosition();
-        double liftAngle = armLiftEncoder.getDistance();
-        double pov = driveJoystick.getPOV();
-
 
         // Arm Extension
+
+        double extendPos = armExtendEncoder.getPosition();
+        double pov = driveJoystick.getPOV();
+
+        double maxArmExtension = Math.min(armExtendLimit, (armHeightInches / Math.cos(armLiftEncoder.getDistance() / 180 * Math.PI) / (armExtendInches - armRetractInches) * armExtendLimit));
+
         int extendDirection = 0;
         double extendPower = armExtendMaxPower;
 
@@ -374,26 +392,47 @@ public class Robot extends TimedRobot {
         } else if (pov == 180 || pov == 225 || pov == 135 || driveJoystick.getRawButton(4)) {
             extendDirection = -1;
         }
-        
-        armExtend.set(mapLimitedPower(extendDirection, extendPos, 0, armExtendLimit, armExtendMinPower, extendPower, armExtendPadding * armExtendLimit));
-        
+
+        armExtend.set(mapLimitedPower(extendDirection, extendPos, 0, maxArmExtension, armExtendMinPower, extendPower, armExtendPadding * maxArmExtension));
+
 
         // Arm Lifting
+
+        double liftAngle = armLiftEncoder.getDistance();
+        double rangeOfMotion = armLiftMaxAngle - armLiftMinAngle;
+
         if (driveJoystick.getTrigger()) {
-            currentArmLiftPower = -mapPower(driveJoystick.getRawAxis(3), 0, armLiftMaxPower, throttleDeadZone);
+            armLiftTargetAngle = mapNumber(driveJoystick.getRawAxis(3), -1, 1, armLiftMaxAngle, armLiftMinAngle);
         }
+
+        armLiftTargetAngle = Math.max(armLiftTargetAngle, armLiftMinAngle);
+        armLiftTargetAngle = Math.min(armLiftTargetAngle, armLiftMaxAngle);
+
+        if (Math.abs(armLiftTargetAngle - liftAngle) > armLiftAnglePrecision) {
+            if (armLiftTargetAngle - liftAngle > 0 && (p_armLiftEncoder - liftAngle) < 0) {
+                armLiftBasePower += mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
+            }
+
+            if (armLiftTargetAngle - liftAngle < 0 && (p_armLiftEncoder - liftAngle) > 0) {
+                armLiftBasePower -= mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
+            }
+        }
+
+        double armLiftPower = armLiftBasePower + mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
 
         if (liftAngle > armLiftMaxAngle) {
-            currentArmLiftPower = Math.min(0, currentArmLiftPower);
+            armLiftPower = Math.min(0, armLiftPower);
         }
 
-        if (liftAngle < armLiftMinAngle) {
-            currentArmLiftPower = Math.max(0, currentArmLiftPower);
+        if (liftAngle < armLiftMinAngle || (extendPos > maxArmExtension && maxArmExtension != armExtendLimit)) {
+            armLiftPower = Math.max(0, armLiftPower);
         }
 
-        currentArmLiftPower = Math.min(armLiftMaxPower, Math.abs(currentArmLiftPower)) * Math.signum(currentArmLiftPower);
-        
-        armLift.set(currentArmLiftPower);
+        armLiftPower = Math.min(armLiftMaxPower, Math.abs(armLiftPower)) * Math.signum(armLiftPower);
+
+        armLift.set(armLiftPower);
+
+        p_armLiftEncoder = liftAngle;
     }
 
 
@@ -437,7 +476,7 @@ public class Robot extends TimedRobot {
 
     /* 
     TODO: Prevent arm from extending into the ground
-
+    
     TODO: Add smartdashboard stuff
         Things to add:
         - Claw state (open / closed / at limits)
