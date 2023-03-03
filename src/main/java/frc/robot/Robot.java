@@ -39,11 +39,11 @@ public class Robot extends TimedRobot {
 
 
     // ENABLED SYSTEMS
-    boolean enableDrive = true;
-    boolean enableBalance = true;
+    boolean enableDrive = false;
+    boolean enableBalance = false;
     boolean enableArm = true;
     boolean enableClaw = false;
-    boolean enablePneumaticClaw = true;
+    boolean enablePneumaticClaw = false;
     boolean enableVision = false;
 
 
@@ -66,9 +66,9 @@ public class Robot extends TimedRobot {
 
     // ARM POSITIONING
     double armExtendInches = 60; // Inches from pivot when fully extended
-    double armRetractInches = 20; // Inches from pivot when fully retracted
+    double armRetractInches = 40; // Inches from pivot when fully retracted
     double armHeightInches = 40; // Inches above ground from pivot
-    double armLiftEncoderOffset = 0; // Offset so encoder reads 90 degrees when parallel to ground
+    double armLiftEncoderOffset = 242; // Offset so encoder reads 90 degrees when parallel to ground
 
 
     // ARM EXTENSION
@@ -81,8 +81,8 @@ public class Robot extends TimedRobot {
     // ARM LIFTING
     double armLiftMaxPower = 0.15; // Max arm lifting power
     double armLiftPowerIncrement = 0.005; // Arm lifting power increment each tick
-    double armLiftMinAngle = 270 - armLiftEncoderOffset; // Min arm angle (degrees)
-    double armLiftMaxAngle = 360 - armLiftEncoderOffset; // Max arm angle (degrees)
+    double armLiftMinAngle = 28; // Min arm angle (degrees)
+    double armLiftMaxAngle = 118; // Max arm angle (degrees)
     double armLiftAnglePrecision = 1; // Degrees of precision
 
 
@@ -204,8 +204,8 @@ public class Robot extends TimedRobot {
 
         armExtendEncoder = armExtend.getEncoder();
         armLiftEncoder = new DutyCycleEncoder(DIO_armLiftEncoder);
+        armLiftEncoder.setPositionOffset(armLiftEncoderOffset / 360.0);
         armLiftEncoder.setDistancePerRotation(360.0);
-        armLiftEncoder.setPositionOffset(armLiftEncoderOffset);
 
         p_armLiftEncoder = armLiftEncoder.getDistance();
         armLiftTargetAngle = armLiftEncoder.getDistance();
@@ -304,8 +304,6 @@ public class Robot extends TimedRobot {
 
         if (enableVision) {
             runVision();
-        } else {
-            System.out.println("Vision Disabled");
         }
     }
 
@@ -335,6 +333,7 @@ public class Robot extends TimedRobot {
         } else if (driveJoystick.getTrigger()) {
             calibrateBasePowerInit();
         }
+        System.out.println(armLiftEncoder.getDistance());
     }
 
 
@@ -372,13 +371,17 @@ public class Robot extends TimedRobot {
 
 
     private void runArm() {
-
+        
         // Arm Extension
 
         double extendPos = armExtendEncoder.getPosition();
         double pov = driveJoystick.getPOV();
 
-        double maxArmExtension = Math.min(armExtendLimit, (armHeightInches / Math.cos(armLiftEncoder.getDistance() / 180 * Math.PI) / (armExtendInches - armRetractInches) * armExtendLimit));
+        double maxArmExtension = Math.min(armExtendLimit, ((armHeightInches / Math.cos(armLiftEncoder.getDistance() / 180 * Math.PI) - armRetractInches) / (armExtendInches - armRetractInches) * armExtendLimit));
+        
+        if (armLiftEncoder.getDistance() > 90) {
+            maxArmExtension = armExtendLimit;
+        }
 
         int extendDirection = 0;
         double extendPower = armExtendMaxPower;
@@ -393,6 +396,9 @@ public class Robot extends TimedRobot {
             extendDirection = -1;
         }
 
+        // System.out.println(armHeightInches / Math.cos(armLiftEncoder.getDistance() / 180 * Math.PI));
+        // System.out.println(maxArmExtension);
+        System.out.println(maxArmExtension - extendPos);
         armExtend.set(mapLimitedPower(extendDirection, extendPos, 0, maxArmExtension, armExtendMinPower, extendPower, armExtendPadding * maxArmExtension));
 
 
@@ -409,16 +415,19 @@ public class Robot extends TimedRobot {
         armLiftTargetAngle = Math.min(armLiftTargetAngle, armLiftMaxAngle);
 
         if (Math.abs(armLiftTargetAngle - liftAngle) > armLiftAnglePrecision) {
-            if (armLiftTargetAngle - liftAngle > 0 && (p_armLiftEncoder - liftAngle) < 0) {
-                armLiftBasePower += mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
+            double increment = mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion / 5, rangeOfMotion / 5, -armLiftMaxPower, armLiftMaxPower) / 20;
+
+            if (
+                (armLiftTargetAngle > liftAngle && liftAngle - p_armLiftEncoder < 0.05) || // Need to go up
+                (armLiftTargetAngle < liftAngle && liftAngle - p_armLiftEncoder > -0.05)    // Need to go down
+            ) {
+                armLiftBasePower += increment;
             }
 
-            if (armLiftTargetAngle - liftAngle < 0 && (p_armLiftEncoder - liftAngle) > 0) {
-                armLiftBasePower -= mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
-            }
+            // System.out.println(armLiftTargetAngle - liftAngle);
         }
 
-        double armLiftPower = armLiftBasePower + mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion, rangeOfMotion, -armLiftMaxPower, armLiftMaxPower);
+        double armLiftPower = armLiftBasePower + mapNumber(armLiftTargetAngle - liftAngle, -rangeOfMotion / 2, rangeOfMotion / 2, -armLiftMaxPower, armLiftMaxPower);
 
         if (liftAngle > armLiftMaxAngle) {
             armLiftPower = Math.min(0, armLiftPower);
