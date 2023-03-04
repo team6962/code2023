@@ -147,6 +147,10 @@ public class Robot extends TimedRobot {
     double armLiftTargetAngle = 0;
     double p_armLiftEncoder = 0;
 
+    //LIMELIGHT AUTON CODE
+    boolean isCentered = false;
+    boolean isApproached = false;
+
 
     // Called when robot is enabled
     @Override
@@ -355,6 +359,13 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         timeNow = System.currentTimeMillis() - timeStart;
+        if (!isCentered){
+            centerTarget();
+        }
+        else if (!isApproached){
+            approachTarget();
+        }
+        
     }
 
 
@@ -453,6 +464,31 @@ public class Robot extends TimedRobot {
         }
     }
 
+    private void centerTarget(){
+        double xPos = LimelightHelpers.getTX("");
+        double yPos = LimelightHelpers.getTY("");
+        if (xPos != 0){ //If an object is being detected
+            if (Math.abs(yPos) < 5){ //If the object is relatively level
+              if (xPos > 2){
+                drive.arcadeDrive(0.4, 0);
+              } 
+              else if (xPos < -2){
+                drive.arcadeDrive(-0.4, 0);
+              } 
+              else {
+                isCentered = true;
+              }
+            } 
+            
+        }
+    }
+
+    private void approachTarget(){
+        double area = LimelightHelpers.getTA("");
+        if (area < 80){
+            drive.arcadeDrive(0, 0.5);
+        }
+    }
 
     private void runClaw() {
         double grabPos = clawGrabEncoder.getPosition();
